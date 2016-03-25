@@ -8,13 +8,14 @@
 
 import mechanicalsoup
 import json
-import pprint
-
 import datetime
+from parseArticle import parse
+
 def extract_links_from_search_results_json(search_page):
 	response = search_page.json()['response']
 	for snippet in response['docs']:
 		print(snippet['web_url'])
+		parse(snippet['web_url'])
 	
 
 def crawl_search_pages():

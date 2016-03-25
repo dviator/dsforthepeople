@@ -10,9 +10,9 @@ def parse(url):
 	text = article.text
 	date = article.publish_date
 
-	with open('/home/maevyn/Documents/dsforthepeople/data/nytimes', 'w') as csvfile:
+	with open('/home/maevyn/Documents/dsforthepeople/data/nytimes/nytimesArticles.txt', 'w') as csvfile:
 		articleWriter = csv.writer(csvfile, delimiter='\t',quoting=csv.QUOTE_ALL)
-		articleWriter.writerow(title,date,authors,text)
+		articleWriter.writerow([title,date,authors,text])
 	# print(title)
 	# print(authors)
 	# print(text)

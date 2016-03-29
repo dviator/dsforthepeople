@@ -10,15 +10,21 @@ import mechanicalsoup
 import json
 import datetime
 from parseArticle import parse
+import time
+import logging
+
+
 
 def extract_links_from_search_results_json(search_page):
 	response = search_page.json()['response']
 	for snippet in response['docs']:
 		print(snippet['web_url'])
-		parse(snippet['web_url'])
+		parse(snippet['web_url'],"nytimes")
 	
 
 def crawl_search_pages():
+	#Set program to log to a file
+	logging.basicConfig(filename='PerformanceStats.log',level=logging.DEBUG)
 	browser = mechanicalsoup.Browser()
 	#Write an outer loop that increments the dates in the URL's
 	#Turn this into a loop of page visits
@@ -34,11 +40,12 @@ def crawl_search_pages():
 	while begin_date < end_date:
 		search_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date={0:d}{1:02d}{2:02d}&begin_date={3:d}{4:02d}{5:02d}&page=1&facet=true".format(begin_date.year,begin_date.month,begin_date.day,begin_date.year,begin_date.month,begin_date.day)
 		print(search_url)
+		date_start_time = time.time()
 		begin_date += datetime.timedelta(days=1)
 		page_number = 1
 		#Placeholder while loop until more efficient loop breaker can be found
 		while page_number < 100:
-
+			page_start_time = time.time()
 			print("Search URL = ",search_url)
 			search_page = browser.get(search_url)
 			extract_links_from_search_results_json(search_page)
@@ -47,8 +54,10 @@ def crawl_search_pages():
 			page_number += 1
 		
 			search_url = search_url[::-1].replace(str(old_page_number)[::-1],str(page_number)[::-1],1)[::-1]
-			
-
+			logging.info("Day {} Page {} parsed in {} seconds".format(begin_date,old_page_number,(time.time() - page_start_time)))
+		
+		logging.info("Day {} parsed in {} seconds".format(begin_date,(time.time() - date_start_time)))
+		
 
 	#Implement DEBUG Logging Here
 	# print(type(search_results))

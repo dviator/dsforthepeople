@@ -1,21 +1,40 @@
 import newspaper as np
 import csv
-def parse(url):
+import random
+def parse(url, newsSource):
+	#Collect data about each article
 	article = np.Article(url)
 	article.download()
 	article.parse()
 
+	#Store metadata to variables
 	title = article.title
 	authors = article.authors
 	text = article.text
 	date = article.publish_date
+	# meta_keywords = article.meta_keywords
+	# meta_description = article.meta_description
 
-	with open('/home/maevyn/Documents/dsforthepeople/data/nytimes/nytimesArticles.txt', 'w') as csvfile:
-		articleWriter = csv.writer(csvfile, delimiter='\t',quoting=csv.QUOTE_ALL)
-		articleWriter.writerow([title,date,authors,text])
+	#Build up unique filename for each articles full text snippet
+	#Append a random value to title in case there are duplicate titles
+	#Title may includes /'s, which breaks things. Need to escape these or do something else'
+	random_num = random.getrandbits(64)
+	filename = str(random_num)
+
+	#Write metadata and reference to full text file name to csv separated by special character
+	with open('/home/maevyn/Documents/dsforthepeople/data/nytimes/metadata/nytimesArticles.txt', 'a') as csvfile:
+		articleWriter = csv.writer(csvfile, delimiter='\u001c',quoting=csv.QUOTE_ALL)
+		articleWriter.writerow([title,date,authors,newsSource,filename])
 	# print(title)
 	# print(authors)
-	# print(text)
+	# print(date)
+	# print(tags)
+	# print(meta_keywords)
+	# print(meta_description)
 	print("Row Writer complete")
+
+	fullTextFile = open('/home/maevyn/Documents/dsforthepeople/data/nytimes/fullText/'+filename,'w')
+	fullTextFile.write(text)
+
 url = "http://www.nytimes.com/2016/03/26/world/middleeast/abd-al-rahman-mustafa-al-qaduli-isis-reported-killed-in-syria.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=first-column-region&region=top-news&WT.nav=top-news"
-parse(url)
+parse(url,"test")

@@ -14,17 +14,20 @@ import time
 import logging
 
 
+#Unnecessary with Multithreaded implementation. Logic absorbed into crawl nytimes_archive function
+# def extract_links_from_search_results_json(search_page):
+# 	response = search_page.json()['response']
+# 	return map(lambda item: )
+# 	for snippet in response['docs']:
+# 		print(snippet['web_url'])
 
-def extract_links_from_search_results_json(search_page):
-	response = search_page.json()['response']
-	for snippet in response['docs']:
-		print(snippet['web_url'])
-		parse(snippet['web_url'],"nytimes")
+		# parse_start = time.time()
+		# parse(snippet['web_url'],"nytimes")
+		# logging.info("Parse call completed in {} seconds".format(time.time() - parse_start))
 	
 
-def crawl_search_pages():
-	#Set program to log to a file
-	logging.basicConfig(filename='PerformanceStats.log',level=logging.DEBUG)
+def crawl_nytimes_archive(queue):
+	logging.basicConfig(filename='PerformanceStats.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
 	browser = mechanicalsoup.Browser()
 	#Write an outer loop that increments the dates in the URL's
 	#Turn this into a loop of page visits
@@ -48,7 +51,16 @@ def crawl_search_pages():
 			page_start_time = time.time()
 			print("Search URL = ",search_url)
 			search_page = browser.get(search_url)
-			extract_links_from_search_results_json(search_page)
+			response = search_page.json()['response']
+			for snippet in response['docs']:
+				print(snippet['web_url'])
+				logging.info('Queueing {}'.format(snippet['web_url']))
+				#Place article link on queue
+				queue.put((snippet['web_url'],"nytimes"))
+			
+			#Shutting off for multithreading implementation experiment
+			# extract_links_from_search_results_json(search_page)
+
 			print("Page number ",page_number,"successful")
 			old_page_number = page_number
 			page_number += 1
@@ -67,7 +79,7 @@ def crawl_search_pages():
 	# #print(search_page_one.json())
 	# print(type(search_page_one.json()))
 	# print 
-crawl_search_pages()
+# crawl_nytimes_archive()
 
 
 	

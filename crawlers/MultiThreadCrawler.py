@@ -31,7 +31,7 @@ def main():
 	#Create queue to communicate with worker threads
 	queue = Queue()
 	#Create 10 Worker Threads
-	for x in range(100):
+	for x in range(10):
 		worker = DownloadWorker(queue)
 		worker.daemon = True
 		worker.start()

@@ -18,15 +18,17 @@ class DownloadWorker(Thread):
 		worker_start = time.time()
 		while True:
 			link, source = self.queue.get()
-			if i % 10 == 0:
+			task_start = time.time()
+			if i % 100 == 0:
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
 			parse(link, source)
+			logging.info("Parsed {} article {} in {} seconds".format(source,link,time.time()-task_start))
 			self.queue.task_done()
 			i+=1
 
 def main():
 	#Set program to log to a file
-	logging.basicConfig(filename='PerformanceStats.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
+	logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
 	ts = time.time()
 	#Create queue to communicate with worker threads
 	queue = Queue()

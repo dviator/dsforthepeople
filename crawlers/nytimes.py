@@ -27,7 +27,7 @@ import logging
 	
 
 def crawl_nytimes_archive(queue):
-	logging.basicConfig(filename='PerformanceStats.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
+	logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
 	browser = mechanicalsoup.Browser()
 	#Write an outer loop that increments the dates in the URL's
 	#Turn this into a loop of page visits
@@ -49,12 +49,12 @@ def crawl_nytimes_archive(queue):
 		#Placeholder while loop until more efficient loop breaker can be found
 		while page_number < 100:
 			page_start_time = time.time()
-			print("Search URL = ",search_url)
+			logging.info("Base nytimes Search URL = {}".format(search_url))
 			search_page = browser.get(search_url)
 			response = search_page.json()['response']
 			for snippet in response['docs']:
-				print(snippet['web_url'])
-				logging.info('Queueing {}'.format(snippet['web_url']))
+				#print(snippet['web_url'])
+				logging.info('Queueing url {}'.format(snippet['web_url']))
 				#Place article link on queue
 				queue.put((snippet['web_url'],"nytimes"))
 			
@@ -66,9 +66,9 @@ def crawl_nytimes_archive(queue):
 			page_number += 1
 		
 			search_url = search_url[::-1].replace(str(old_page_number)[::-1],str(page_number)[::-1],1)[::-1]
-			logging.info("Day {} Page {} parsed in {} seconds".format(begin_date,old_page_number,(time.time() - page_start_time)))
+			logging.info("Day {} Page {} queued in {} seconds".format(begin_date,old_page_number,(time.time() - page_start_time)))
 		
-		logging.info("Day {} parsed in {} seconds".format(begin_date,(time.time() - date_start_time)))
+		logging.info("Day {} queued in {} seconds".format(begin_date,(time.time() - date_start_time)))
 		
 
 	#Implement DEBUG Logging Here

@@ -4,7 +4,7 @@ import random
 import time
 import logging
 
-logging.basicConfig(filename='PerformanceStats.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
+logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
 
 #Set up write paths
 #data_root_dir = "/data"
@@ -18,10 +18,10 @@ def parse(url, newsSource):
 	article = np.Article(url)
 	download_start = time.time()
 	article.download()
-	logging.info("Download completed in {} seconds".format(time.time()- download_start))
+	logging.info("Downloading article at {} completed in {} seconds".format(url, time.time()- download_start))
 	parse_start = time.time()
 	article.parse()
-	logging.info("Parse completed in {} seconds".format(time.time()- parse_start))
+	logging.debug("Parse completed in {} seconds".format(time.time()- parse_start))
 
 	#Store metadata to variables
 	title = article.title
@@ -39,12 +39,12 @@ def parse(url, newsSource):
 
 	csv_start = time.time()
 	metadata_path = data_root_dir + "/" + newsSource + "/metadata/" + newsSource + "Articles.txt"
-	logging.info("Metadata path is {}".format(metadata_path))
+	logging.debug("Metadata path is {}".format(metadata_path))
 	#Write metadata and reference to full text file name to csv separated by special character
 	with open(metadata_path, 'a') as csvfile:
 		articleWriter = csv.writer(csvfile, delimiter='\u001c',quoting=csv.QUOTE_ALL)
 		articleWriter.writerow([title,date,authors,newsSource,filename])
-	logging.info("CSV write completed in {} seconds".format(time.time()- csv_start))
+	logging.debug("CSV write completed to {} in {} seconds".format(metadata_path,time.time()- csv_start))
 
 	# print(title)
 	# print(authors)
@@ -52,16 +52,17 @@ def parse(url, newsSource):
 	# print(tags)
 	# print(meta_keywords)
 	# print(meta_description)
-	print("Row Writer complete")
+	#Debug print
+	#print("Row Writer complete")
 
 	full_text_path = data_root_dir + "/" + newsSource + "/fullText/" + filename
-	logging.info("Full text path is {}".format(full_text_path))
+	logging.debug("Full text path is {}".format(full_text_path))
 	text_start = time.time()
 	fullTextFile = open(full_text_path,'w')
 	fullTextFile.write(text)
-	logging.info("Full text write completed in {} seconds".format(time.time()- text_start))
+	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))
 
-	logging.info("Complete parse function completed in {} seconds".format(time.time()- parse_start))
+	logging.info("Parse function of url {} completed in {} seconds".format(url,time.time()- parse_start))
 
 
 #Test article to parse when module is called directly from command line

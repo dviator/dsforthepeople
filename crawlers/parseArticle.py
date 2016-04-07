@@ -7,7 +7,9 @@ import logging
 logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
 
 #Set up write paths
+#AWS Path
 #data_root_dir = "/data"
+#Dan's local path
 data_root_dir = "/home/maevyn/Documents/dsforthepeople/data"
 
 

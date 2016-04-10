@@ -33,7 +33,7 @@ def crawl_nytimes_archive(queue):
 	#Turn this into a loop of page visits
 
 	#Define Date Values so they can be incremented in search URL
-	end_date = datetime.date(2016,3,19)
+	end_date = datetime.date(2007,2,1)
 	begin_date = datetime.date(2007,1,1)
 
 	base_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=20160319&begin_date=20070101&facet=true"
@@ -56,7 +56,9 @@ def crawl_nytimes_archive(queue):
 				#print(snippet['web_url'])
 				logging.info('Queueing url {}'.format(snippet['web_url']))
 				#Place article link on queue
-				queue.put((snippet['web_url'],"nytimes"))
+				#TODO add begindate string to queue
+				logging.info('Queuing following variables: {}, {}, {}'.format(snippet['web_url'],"nytimes",begin_date))
+				queue.put((snippet['web_url'],"nytimes",begin_date))
 			
 			#Shutting off for multithreading implementation experiment
 			# extract_links_from_search_results_json(search_page)

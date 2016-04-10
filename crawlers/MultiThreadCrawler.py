@@ -17,11 +17,12 @@ class DownloadWorker(Thread):
 		i = 0
 		worker_start = time.time()
 		while True:
-			link, source = self.queue.get()
+			link, source, urlDate = self.queue.get()
 			task_start = time.time()
 			if i % 100 == 0:
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
-			parse(link, source)
+			logging.info("Calling parse with args: {}, {}, {}".format(link,source,urlDate))
+			parse(link, source, urlDate)
 			logging.info("Parsed {} article {} in {} seconds".format(source,link,time.time()-task_start))
 			self.queue.task_done()
 			i+=1

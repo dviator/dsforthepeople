@@ -85,5 +85,5 @@ def parse(url, newsSource, urldate):
 
 #Test article to parse when module is called directly from command line
 #Turn off before running multithreader or will break
-url = "http://www.nytimes.com/2016/03/26/world/middleeast/abd-al-rahman-mustafa-al-qaduli-isis-reported-killed-in-syria.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=first-column-region&region=top-news&WT.nav=top-news"
-parse(url,"test","2007-01-02")
+#url = "http://www.nytimes.com/2016/03/26/world/middleeast/abd-al-rahman-mustafa-al-qaduli-isis-reported-killed-in-syria.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=first-column-region&region=top-news&WT.nav=top-news"
+#parse(url,"test","2007-01-02")

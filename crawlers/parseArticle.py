@@ -42,7 +42,7 @@ def parse(url, newsSource, urldate):
 		date = urldate
 		print("URL gathered date is of type: {}".format(type(date)))
 	#Format date to be the same whether it's from url or Newspaper
-	date = date.isoformat()
+	date = date.strftime('%m-%d-%Y')
 	#Build up unique filename for each articles full text snippet
 	#Append a random value to title in case there are duplicate titles
 	#Title may includes /'s, which breaks things. Need to escape these or do something else'

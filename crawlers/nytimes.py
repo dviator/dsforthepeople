@@ -1,87 +1,69 @@
-#Take raw http address
-#Fetch HTML
-#Parse handful of article links from HTML
-#Pass to newspaper class
-#Collect relevant data in newspaper class
-#Iterate search page number in URL string
-#Repeat
-
 import mechanicalsoup
 import json
 import datetime
-from parseArticle import parse
 import time
 import logging
+import configparser
+import sys
 
+logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
+config = configparser.ConfigParser()
+config.read("newscrawler.conf")
+start_date_year = config.getint('nytimes','start_date_year')
+start_date_month = config.getint('nytimes','start_date_month')
+start_date_day = config.getint('nytimes','start_date_day')
+end_date_year = config.getint('nytimes','end_date_year')
+end_date_month = config.getint('nytimes','end_date_month')
+end_date_day = config.getint('nytimes','end_date_day')
 
-#Unnecessary with Multithreaded implementation. Logic absorbed into crawl nytimes_archive function
-# def extract_links_from_search_results_json(search_page):
-# 	response = search_page.json()['response']
-# 	return map(lambda item: )
-# 	for snippet in response['docs']:
-# 		print(snippet['web_url'])
-
-		# parse_start = time.time()
-		# parse(snippet['web_url'],"nytimes")
-		# logging.info("Parse call completed in {} seconds".format(time.time() - parse_start))
-	
 
 def crawl_nytimes_archive(queue):
-	logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
+	
 	browser = mechanicalsoup.Browser()
-	#Write an outer loop that increments the dates in the URL's
-	#Turn this into a loop of page visits
 
 	#Define Date Values so they can be incremented in search URL
-	end_date = datetime.date(2007,2,1)
-	begin_date = datetime.date(2007,1,1)
+	end_date = datetime.date(end_date_year,end_date_month,end_date_day)
+	#Defines the date to start crawling at.
+	target_date = datetime.date(start_date_year,start_date_month,start_date_day)
 
 	base_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=20160319&begin_date=20070101&facet=true"
 	paged_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=20160319&begin_date=20070101&page=1&facet=true"
 	
-	
-	while begin_date < end_date:
-		search_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date={0:d}{1:02d}{2:02d}&begin_date={3:d}{4:02d}{5:02d}&page=1&facet=true".format(begin_date.year,begin_date.month,begin_date.day,begin_date.year,begin_date.month,begin_date.day)
+	#Loop through search results by calling search URL for each date in range one at a time
+	while target_date < end_date:
+		search_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date={0:d}{1:02d}{2:02d}&begin_date={3:d}{4:02d}{5:02d}&page=1&facet=true".format(target_date.year,target_date.month,target_date.day,target_date.year,target_date.month,target_date.day)
 		print(search_url)
 		date_start_time = time.time()
-		begin_date += datetime.timedelta(days=1)
+		
 		page_number = 1
-		#Placeholder while loop until more efficient loop breaker can be found
+		#Loop through each page of search results
 		while page_number < 100:
 			page_start_time = time.time()
 			logging.info("Base nytimes Search URL = {}".format(search_url))
-			search_page = browser.get(search_url)
+			#Raise exception if network IO fails but continue execution
+			#Causes program to survice a command line Ctrl-C, would like to profile network error and catch specifically instead
+			try:
+				search_page = browser.get(search_url)
+			except:
+				e = sys.exc_info()[0]
+				logging.info("nytimes queueing Error: {}".format(e))
+				break
+
 			response = search_page.json()['response']
 			for snippet in response['docs']:
-				#print(snippet['web_url'])
-				logging.info('Queueing url {}'.format(snippet['web_url']))
 				#Place article link on queue
-				#TODO add begindate string to queue
-				logging.info('Queuing following variables: {}, {}, {}'.format(snippet['web_url'],"nytimes",begin_date))
-				queue.put((snippet['web_url'],"nytimes",begin_date))
-			
-			#Shutting off for multithreading implementation experiment
-			# extract_links_from_search_results_json(search_page)
+				logging.info('Queueing url {}'.format(snippet['web_url']))
+				logging.info('Queuing following variables: {}, {}, {}'.format(snippet['web_url'],"nytimes",target_date))
+				queue.put((snippet['web_url'],"nytimes",target_date))
 
-			print("Page number ",page_number,"successful")
+			print("Day {} Page number {} successful".format(target_date.strftime('%m-%d-%Y'),page_number))
+			#Get new page number and preserve old to perform string replacement in new url.
 			old_page_number = page_number
 			page_number += 1
-		
 			search_url = search_url[::-1].replace(str(old_page_number)[::-1],str(page_number)[::-1],1)[::-1]
-			logging.info("Day {} Page {} queued in {} seconds".format(begin_date,old_page_number,(time.time() - page_start_time)))
+
+			logging.info("Day {} Page {} queued in {} seconds".format(target_date,old_page_number,(time.time() - page_start_time)))
 		
-		logging.info("Day {} queued in {} seconds".format(begin_date,(time.time() - date_start_time)))
-		
-
-	#Implement DEBUG Logging Here
-	# print(type(search_results))
-	# print(search_results.keys())
-	# print(search_results['response'])
-
-	# #print(search_page_one.json())
-	# print(type(search_page_one.json()))
-	# print 
-# crawl_nytimes_archive()
-
-
-	
+		logging.info("Day {} queued in {} seconds".format(target_date,(time.time() - date_start_time)))
+		#Increment date to search new url when all pages for last date are complete. 
+		target_date += datetime.timedelta(days=1)

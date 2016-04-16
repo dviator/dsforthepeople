@@ -5,24 +5,27 @@ import time
 import logging
 import os.path
 import datetime
+import configparser
 
 logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
-
-#Set up write paths
-#AWS Path
-#data_root_dir = "/data"
-#Dan's local path
-data_root_dir = "/home/maevyn/Documents/dsforthepeople/data"
-
-
+config = configparser.ConfigParser()
+config.read("newscrawler.conf")
+data_root_dir = config.get('parsearticle','data_root_dir')
 
 def parse(url, newsSource, urldate):
 	complete_parse_start = time.time()
 	#Collect data about each article
 	article = np.Article(url)
 	download_start = time.time()
-	article.download()
-	logging.info("Downloading article at {} completed in {} seconds".format(url, time.time()- download_start))
+	try:
+		article.download()
+	except:
+		print("For article at url {}, exception block entered".format(url))
+		e = sys.exc_info()[0]
+		logging.info("parsearticle Error: {}".format(e))
+		return
+	logging.info("Downloading article at {} completed in {} seconds".format(url, time.time()- download_start))	
+	
 	parse_start = time.time()
 	article.parse()
 	logging.debug("Parse completed in {} seconds".format(time.time()- parse_start))
@@ -32,20 +35,15 @@ def parse(url, newsSource, urldate):
 	authors = article.authors
 	text = article.text
 	date = article.publish_date
-	
-	# meta_keywords = article.meta_keywords
-	# meta_description = article.meta_description
 
 	#If Newspaper can't get the date from the article use the one from the search URL
 	if date is None:
-		print("Newspaper gathered date is of type: {}".format(type(date)))
 		date = urldate
-		print("URL gathered date is of type: {}".format(type(date)))
 	#Format date to be the same whether it's from url or Newspaper
 	date = date.strftime('%m-%d-%Y')
-	#Build up unique filename for each articles full text snippet
+
+	#Build up unique filename for each article's full text snippet
 	#Append a random value to title in case there are duplicate titles
-	#Title may includes /'s, which breaks things. Need to escape these or do something else'
 	random_num = random.getrandbits(64)
 	filename = str(random_num)
 
@@ -64,22 +62,17 @@ def parse(url, newsSource, urldate):
 		articleWriter.writerow([title,date,url,authors,newsSource,filename])
 	logging.debug("CSV write completed to {} in {} seconds".format(metadata_path,time.time()- csv_start))
 
-	# print(title)
-	# print(authors)
-	# print(date)
-	# print(tags)
-	# print(meta_keywords)
-	# print(meta_description)
-	#Debug print
-	#print("Row Writer complete")
-
+	#Write plaintext of article into file named with surrogate key reference to metadata entry in metadata file
 	full_text_path = data_root_dir + "/" + newsSource + "/fullText/" + filename
 	logging.debug("Full text path is {}".format(full_text_path))
 	text_start = time.time()
-	fullTextFile = open(full_text_path,'w')
-	fullTextFile.write(text)
-	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))
+	#Want to make this use with for safety. This could be breaking things with too many open filehandles
+	with open(full_text_path, 'w') as fullTextFile:
+		fullTextFile.write(text)
 
+	#fullTextFile = open(full_text_path,'w')
+	#fullTextFile.write(text)
+	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))
 	logging.info("Parse function of url {} completed in {} seconds".format(url,time.time()- parse_start))
 
 

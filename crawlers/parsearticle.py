@@ -69,9 +69,6 @@ def parse(url, newsSource, urldate):
 	#Want to make this use with for safety. This could be breaking things with too many open filehandles
 	with open(full_text_path, 'w') as fullTextFile:
 		fullTextFile.write(text)
-
-	#fullTextFile = open(full_text_path,'w')
-	#fullTextFile.write(text)
 	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))
 	logging.info("Parse function of url {} completed in {} seconds".format(url,time.time()- parse_start))
 

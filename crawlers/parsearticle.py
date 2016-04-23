@@ -1,4 +1,4 @@
-import newspaper as np
+import newspaper
 import csv
 import random
 import time
@@ -6,8 +6,9 @@ import logging
 import os.path
 import datetime
 import configparser
+import sys
 
-logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
+logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s %(message)s')
 config = configparser.ConfigParser()
 config.read("newscrawler.conf")
 data_root_dir = config.get('parsearticle','data_root_dir')
@@ -15,15 +16,18 @@ data_root_dir = config.get('parsearticle','data_root_dir')
 def parse(url, newsSource, urldate):
 	complete_parse_start = time.time()
 	#Collect data about each article
-	article = np.Article(url)
+	article = newspaper.Article(url)
 	download_start = time.time()
-	try:
-		article.download()
-	except:
-		print("For article at url {}, exception block entered".format(url))
-		e = sys.exc_info()[0]
-		logging.info("parsearticle Error: {}".format(e))
-		return
+	# try:
+	# 	article.download()
+	# 	parse_start = time.time()
+	# 	article.parse()
+	# except newspaper.article.ArticleException:
+	# 	print("Exception trying to parse article at url {}".format(url))
+	# 	raise
+	article.download()
+	parse_start = time.time()
+	article.parse()
 	logging.info("Downloading article at {} completed in {} seconds".format(url, time.time()- download_start))	
 	
 	parse_start = time.time()
@@ -66,7 +70,8 @@ def parse(url, newsSource, urldate):
 	full_text_path = data_root_dir + "/" + newsSource + "/fullText/" + filename
 	logging.debug("Full text path is {}".format(full_text_path))
 	text_start = time.time()
-	#Want to make this use with for safety. This could be breaking things with too many open filehandles
+	
+
 	with open(full_text_path, 'w') as fullTextFile:
 		fullTextFile.write(text)
 	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))

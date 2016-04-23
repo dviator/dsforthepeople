@@ -3,12 +3,13 @@ from threading import Thread
 import time
 import logging
 import configparser
+import newspaper
 
-import parsearticle
+from parsearticle import parse 
 import nytimes
 
 #Set program to log to a file
-logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(message)s')
+logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s: %(message)s')
 config = configparser.ConfigParser()
 config.read("newscrawler.conf")
 numThreads = config.getint('crawler','threads') 
@@ -22,13 +23,25 @@ class DownloadWorker(Thread):
 		i = 0
 		worker_start = time.time()
 		while True:
-			link, source, urlDate = self.queue.get()
+			url, source, urlDate = self.queue.get()
 			task_start = time.time()
 			if i % 100 == 0:
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
-			logging.info("Calling parse with args: {}, {}, {}".format(link,source,urlDate))
-			parsearticle.parse(link, source, urlDate)
-			logging.info("Parsed {} article {} in {} seconds".format(source,link,time.time()-task_start))
+			logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
+			n = 0
+			while n < 40:
+				try:
+					parse(url, source, urlDate)
+					logging.info("Parsed {} article {} in {} seconds".format(source,url,time.time()-task_start))
+				except newspaper.article.ArticleException as e:
+					logging.exception("Exception trying to parse article at url {}".format(url))
+					logging.error("Backing off for 15 seconds...")
+					time.sleep(15)
+					n+=1
+					if n == 40:
+						logging.error("Failed to parse for 10 minutes, moving on to next item in queue.")
+					pass
+			
 			self.queue.task_done()
 			i+=1
 
@@ -45,7 +58,7 @@ def main():
 	logging.info("Begin queueing links")
 	nytimes.crawl_nytimes_archive(queue)
 	queue.join()
-	print('Took {} seconds to parse complete source'.format(time.time() -ts))
+	logging.info('Took {} seconds to parse complete source'.format(time.time() -ts))
 
 
 

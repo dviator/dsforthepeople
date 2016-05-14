@@ -8,10 +8,10 @@ import datetime
 import configparser
 import sys
 
-logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s %(message)s')
 config = configparser.ConfigParser()
-config.read("newscrawler.conf")
+config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
 data_root_dir = config.get('parsearticle','data_root_dir')
+
 
 def parse(url, newsSource, urldate):
 	complete_parse_start = time.time()

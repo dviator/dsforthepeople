@@ -4,17 +4,21 @@ import time
 import logging
 import configparser
 import newspaper
+import os
 
 from parsearticle import parse 
 import nytimes
 
+root_path = os.path.abspath(os.path.dirname(__file__))
+
 #Set program to log to a file
-logging.basicConfig(filename='NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s: %(message)s')
+crawlLogger = logging.basicConfig(filename=root_path+'/NewsCrawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s: %(message)s')
 config = configparser.ConfigParser()
-config.read("newscrawler.conf")
+config.read(root_path+"/newscrawler.conf")
 numThreads = config.getint('crawler','threads') 
 
 class DownloadWorker(Thread):
+	
 	def __init__(self, queue):
 		Thread.__init__(self)
 		self.queue = queue
@@ -33,6 +37,7 @@ class DownloadWorker(Thread):
 				try:
 					parse(url, source, urlDate)
 					logging.info("Parsed {} article {} in {} seconds".format(source,url,time.time()-task_start))
+					break
 				except newspaper.article.ArticleException as e:
 					logging.exception("Exception trying to parse article at url {}".format(url))
 					logging.error("Backing off for 15 seconds...")

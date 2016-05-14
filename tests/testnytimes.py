@@ -12,8 +12,8 @@ import datetime
 class TestNYTimes(unittest.TestCase):
 
 	browser = nytimes.mechanicalsoup.Browser()
-	search_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=01012007&begin_date=01012007&page=1&facet=true"
-	first_day_articles = ['http://www.nytimes.com/2016/05/18/dining/phyllo-torte-recipe-ricotta.html', 'http://www.nytimes.com/2016/05/18/dining/dandelion-salad-recipe.html', 'http://www.nytimes.com/2016/05/18/dining/single-malt-whiskey-review.html', 'http://www.nytimes.com/2016/05/18/dining/taiwan-bear-house-hungry-city.html', 'http://www.nytimes.com/slideshow/2016/05/18/dining/taiwan-bear-house.html', 'http://www.nytimes.com/2016/05/17/science/emily-dickinson-lost-gardens.html', 'http://www.nytimes.com/2016/05/16/sports/two-hour-marathon-kenenisa-bekele.html', 'http://www.nytimes.com/2016/05/12/sports/soccer/chan-yuen-ting-female-soccer-coach-hong-kong.html', 'http://cooking.nytimes.com/recipes/1018114-warm-kale-coconut-and-tomato-salad', 'http://www.nytimes.com/2016/05/15/arts/television/all-the-way-hbo.html']
+	search_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=20070101&begin_date=20070101&page=1&facet=true"
+	first_day_articles = ['http://www.nytimes.com/2007/01/01/sports/ncaafootball/01cnd-outback.html','http://www.nytimes.com/2007/01/01/world/europe/01cnd-union.html','http://www.nytimes.com/2007/01/01/world/asia/01cnd-thai.html','http://www.nytimes.com/2007/01/01/nyregion/01cnd-stext.html','http://www.nytimes.com/2007/01/01/nyregion/01cnd-eliot.html','http://www.nytimes.com/2007/01/01/nyregion/01mbrfs-ONEISKILLEDI_BRF.html','http://www.nytimes.com/2007/01/01/sports/football/01packers.html','http://www.nytimes.com/2007/01/01/nyregion/01mbrfs-burn.html','http://www.nytimes.com/2007/01/01/nyregion/01mbrfs-transit.html','http://www.nytimes.com/2007/01/01/nyregion/01mbrfs-crash.html']
 	target_date = datetime.date(2007,1,1)	
 	stub_queuedElements = []
 
@@ -71,7 +71,6 @@ class TestNYTimes(unittest.TestCase):
 
 	def test_crawlPage(self):
 		crawlPageQueue = Queue()
-
 		
 		nytimes.crawlPage(self.target_date, self.browser, self.search_url, crawlPageQueue, 1)
 		self.assertEqual(crawlPageQueue.qsize(),10)
@@ -82,8 +81,13 @@ class TestNYTimes(unittest.TestCase):
 
 		self.assertCountEqual(queuedElements,self.stub_queuedElements)
 
-	# def test_main(self):
-	# 	nytimes.crawl_nytimes_archive(self.queue)
+	def test_exceptions_crawlPage(self):
+		testExceptionsQueue = Queue()
+		mock_searches = MagicMock(side_effect=['http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=&begin_date=13132007&page=1&facet=true'])
+
+		nytimes.crawlPage(self.target_date, self.browser, badSearchURL, testExceptionsQueue, 1)
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,9 +1,12 @@
 import logging
 import configparser
+import os
 
 logging.basicConfig(filename='LocationCounter.log',level=logging.INFO,format='%(asctime)s %(levelname)s: %(message)s')
+
 config = configparser.ConfigParser()
-config.read("newscrawler.conf")
+config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"../","crawlers/","newscrawler.conf"))
+
 data_root_dir = config.get('parsearticle','data_root_dir')
 #Fetch list of locations.
 #Placeholder until I get connected up to the database in AWS.

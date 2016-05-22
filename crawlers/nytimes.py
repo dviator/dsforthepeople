@@ -50,12 +50,12 @@ def crawl_nytimes_archive(queue):
 		page_number = 1
 		#Loop through each page of search results
 		while page_number < 100:
+			#Queue all the links for this search page
 			crawlPage(target_date, browser, search_url, queue, page_number)
-		
 			#Get new page number and preserve old to perform string replacement in new url.
 			old_page_number = page_number
 			page_number += 1
-
+			#Increment searc url page number by one by reversing url and switching old_page_number with new
 			search_url = search_url[::-1].replace(str(old_page_number)[::-1],str(page_number)[::-1],1)[::-1]
 
 		logging.info("Day {} queued in {} seconds".format(target_date,(time.time() - date_start_time)))
@@ -80,7 +80,7 @@ def crawlPage(target_date, browser, search_url, queue, page_number):
 	#If no exceptions, place article links on queue
 	else:
 		queueArticles(article_urls,queue,target_date)
-		print("Day {} Page number {} queued in {}".format(target_date.strftime('%m-%d-%Y'),page_number,time.time() - page_start_time))
+		print("Day {} Page number {} queued in {} seconds".format(target_date.strftime('%m-%d-%Y'),page_number,time.time() - page_start_time))
 
 	return 
 
@@ -100,7 +100,9 @@ def getSearchJSON(browser,search_url):
 	return search_page
  
 def parseSearchJSON(search_page):
+	print(type(search_page))
 	response = search_page.json()['response']
+	print(type(response))
 	article_urls = []
 	for snippet in response['docs']:
 		#Place article link on queue

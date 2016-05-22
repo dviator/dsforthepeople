@@ -8,6 +8,8 @@ from retrying import retry
 import os
 from queue import Queue
 import datetime
+import logging
+import responses
 
 class TestNYTimes(unittest.TestCase):
 
@@ -21,10 +23,15 @@ class TestNYTimes(unittest.TestCase):
 		stub_queuedElements.append((first_day_articles[i],'nytimes',target_date))
 
 	with open(os.path.join(os.path.abspath(os.path.dirname(__file__)),'ResponseContent.json')) as f:
-		responseContent = json.load(f)
 		response = f.read()
+		responseJson = json.dumps(response)
+	print(type(responseJson))
 
 	maxDiff = None
+
+	def setUp(self):
+		logging.disable(logging.CRITICAL)
+
 	def test_goodresponse_getSearchJSON(self):
 		response = nytimes.getSearchJSON(self.browser,self.search_url)
 		self.assertEqual(200,response.status_code)
@@ -37,12 +44,15 @@ class TestNYTimes(unittest.TestCase):
 		self.maxDiff = None
 		response = nytimes.getSearchJSON(self.browser,self.search_url)
 		self.assertEqual(200,response.status_code)
-
-	def test_parseSearchJSON(self):
-		mock_response = MagicMock(status_code=200, text=self.response)
+	
+	@patch('requests.models.Response.json')
+	def test_parseSearchJSON(self,mock_json):
+		mock_json.json = self.response
+		mock_response = MagicMock(spec=requests.models.Response,status_code=200, body=self.responseJson, json=self.responseJson)
+		print("mock_response is type " + str(type(mock_response)))
 		self.maxDiff = None
 		#Not really a unit test, since calls another function, but very difficult to mock and will reveal errors anyway
-		article_urls = nytimes.parseSearchJSON(nytimes.getSearchJSON(self.browser,self.search_url))
+		article_urls = nytimes.parseSearchJSON(mock_json)
 		self.assertEqual(self.first_day_articles,article_urls)
 
 	def test_queueArticles(self):
@@ -81,12 +91,29 @@ class TestNYTimes(unittest.TestCase):
 
 		self.assertCountEqual(queuedElements,self.stub_queuedElements)
 
-	def test_exceptions_crawlPage(self):
+	@patch('mechanicalsoup.Browser.get')
+	def test_exceptions_crawlPage(self,mock_get):
 		testExceptionsQueue = Queue()
-		mock_searches = MagicMock(side_effect=['http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=&begin_date=13132007&page=1&facet=true'])
+		mock_get.side_effect = [requests.exceptions.MissingSchema("Missing Schema Error"),sentinel.DEFAULT,sentinel.DEFAULT]
 
-		nytimes.crawlPage(self.target_date, self.browser, badSearchURL, testExceptionsQueue, 1)
+		test_searches = ['http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=&begin_date=13132007&page=1&facet=true','http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date=20070101&begin_date=20070101&page=1&facet=',self.search_url]
 
+		for search_url in test_searches:
+			result = nytimes.crawlPage(self.target_date, self.browser, search_url, testExceptionsQueue, 1)
+		self.assertEqual(len(self.first_day_articles),testExceptionsQueue.qsize())
+
+		queuedElements = []
+				
+		while testExceptionsQueue.empty() is not True:
+			queuedElements.append(testExceptionsQueue.get())
+
+		self.assertCountEqual(queuedElements,self.stub_queuedElements)
+
+	@patch('mechanicalsoup.Browser.get')
+	def test_missingSchemaException_crawlPage(self,mock_get):
+		missingSchemaQueue = Queue()
+		mock_get.side_effect = requests.exceptions.MissingSchema("Missing Schema Error")
+		nytimes.crawlPage(self.target_date, self.browser, self.search_url, missingSchemaQueue, 1)
 
 
 if __name__ == '__main__':

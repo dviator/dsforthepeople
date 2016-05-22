@@ -81,12 +81,15 @@ def writeFullTextFile(newsSource,text):
 	random_num = random.getrandbits(64)
 	article_text_filename = str(random_num)
 
-	full_text_path = data_root_dir + "/" + newsSource + "/fullText/" + article_text_filename
+	full_text_path =data_root_dir + "/" + newsSource + "/fullText/"
 	logging.debug("Full text path is {}".format(full_text_path))
 	text_start = time.time()
+	if not os.path.exists(full_text_path):
+		os.makedirs(full_text_path)
 
-	with open(full_text_path, 'w') as fullTextFile:
+	with open(os.path.join(full_text_path,article_text_filename), 'w') as fullTextFile:
 		fullTextFile.write(text)
+
 	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))
 
 	return article_text_filename

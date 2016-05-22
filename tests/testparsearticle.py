@@ -6,6 +6,8 @@ import shutil
 import os
 import logging
 import newspaper
+import random
+from queue import Queue
 
 class TestParseArticle(unittest.TestCase):
 
@@ -60,8 +62,25 @@ class TestParseArticle(unittest.TestCase):
 		testing_fullTextFileNames = os.listdir(self.fullText_dir)
 		self.assertEqual(testing_fullTextFileNames[0],filename)
 
+	def test_write_metadata_row(self):
+		sample_metadata_row = "TODO"
+		sample_header_row = "TODO"
+		metadataQueue = Queue()
+		random_num = random.getrandbits(64)
+		filename = str(random_num)
+		metadataQueue.put((self.sample_title, self.sample_date, self.url, self.sample_authors, self.newsSource, filename))
+		parsearticle.writeMetadataRow(metadataQueue)
+
+		testing_metadataFileNames = os.listdir(self.metadata_dir)
+		with open(os.path.join(self.metadata_dir,testing_metadataFileNames[0])) as metadataFile:
+			metadataFile.nextline()
+			self.assertEqual(sample_header_row,line)
+			metadataFile.nextline()
+			self.assertEqual(sample_metadata_row,line)
 	@patch('newspaper.Article.parse')
 	def test_getArticle_backoff(self,mock_parse):
 		mock_parse.side_effect = [newspaper.article.ArticleException("Article Exception"),mock_parse.DEFAULT]
 		article = parsearticle.getArticle(self.url)
+
 		self.assertIsNotNone(article)
+

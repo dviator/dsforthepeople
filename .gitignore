@@ -3,3 +3,4 @@ crawlers/NewsCrawler.log
 crawlers/__pycache__/
 tests/__pycache__/
 *.pyc
+helpme

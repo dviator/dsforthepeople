@@ -2,5 +2,6 @@ LocationCounter.log
 crawlers/NewsCrawler.log
 crawlers/__pycache__/
 tests/__pycache__/
+data/locations/allCountries.txt
 *.pyc
 helpme

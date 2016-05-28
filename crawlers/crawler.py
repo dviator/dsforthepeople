@@ -31,35 +31,32 @@ class DownloadWorker(Thread):
 			task_start = time.time()
 			if i % 100 == 0:
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
-			logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
-			n = 0
-			while n < 40:
-				try:
-					parsearticle.parse(url, source, urlDate)
-					logging.info("Parsed {} article {} in {} seconds".format(source,url,time.time()-task_start))
-					break
-				except newspaper.article.ArticleException as e:
-					logging.exception("Exception trying to parse article at url {}".format(url))
-					logging.error("Backing off for 15 seconds...")
-					time.sleep(15)
-					n+=1
-					if n == 40:
-						logging.error("Failed to parse for 10 minutes, moving on to next item in queue.")
-					pass
+				logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
+			try:
+				parsearticle.parse(url, source, urlDate)
+				logging.info("Parsed {} article {} in {} seconds".format(source,url,time.time()-task_start))
+
+			except newspaper.article.ArticleException as e:
+				print("I see an exception")
+				logging.exception("Exception trying to parse article at url {}".format(url))
+				pass
 			
 			self.queue.task_done()
 			i+=1
+
+class MetadataWriterWorker(Thread):
+	pass
 
 def main():
 	ts = time.time()
 	#Create queue to communicate with worker threads
 	queue = Queue()
-	#Create 10 Worker Threads
+	#Create numThreads Worker Threads
 	for x in range(numThreads):
 		worker = DownloadWorker(queue)
 		worker.daemon = True
 		worker.start()
-		print("Started workers")
+		# print("Started worker")
 	#Call source specific crawler(s) to enqueue tasks
 	logging.info("Begin queueing links")
 	nytimes.crawl_nytimes_archive(queue)

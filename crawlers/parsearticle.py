@@ -36,23 +36,30 @@ def parse(url, newsSource, urldate):
 
 	#Send metadata about the article back to main thread to be written to central file
 	return title, date, url, authors, newsSource, article_text_filename
-	#Logic for writing a metadata row, needs to be moved to a single threaded function
-	# csv_start = time.time()
-	# metadata_path = data_root_dir + "/" + newsSource + "/metadata/" + newsSource + "Articles.txt"
-	# logging.debug("Metadata path is {}".format(metadata_path))
-
-	# #If file doesn't exist write column names in first row
+	
+def writeMetadataHeader(newsSource):
+	metadata_path = data_root_dir + "/" + newsSource + "/metadata/" + newsSource + "Articles.txt"
+	#If file doesn't exist write column names in first row
 	# if not os.path.isfile(metadata_path):
+	with open(metadata_path, 'a') as csvfile:
+		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
+		articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID"])
 
-	# 	with open(metadata_path, 'a') as csvfile:
-	# 		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
-	# 		articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID"])
-	# #Write metadata and reference to full text file name to csv separated by special character
-	# with open(metadata_path, 'a') as csvfile:
-	# 	articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
-	# 	articleWriter.writerow([title,date,url,authors,newsSource,filename])
-	# logging.debug("CSV write completed to {} in {} seconds".format(metadata_path,time.time()- csv_start))
+	return
 
+def writeMetadataRow(title, date, url, authors, newsSource, article_text_filename):
+	#Logic for writing a metadata row, needs to be moved to a single threaded function
+	csv_start = time.time()
+	metadata_path = data_root_dir + "/" + newsSource + "/metadata/" + newsSource + "Articles.txt"
+	logging.debug("Metadata path is {}".format(metadata_path))
+
+	#Write metadata and reference to full text file name to csv separated by ~ character
+	with open(metadata_path, 'a') as csvfile:
+		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
+		articleWriter.writerow([title,date,url,authors,newsSource,article_text_filename])
+	logging.debug("CSV write completed to {} in {} seconds".format(metadata_path,time.time()- csv_start))
+	
+	return
 
 	#Write plaintext of article into file named with surrogate key reference to metadata entry in metadata file
 
@@ -62,7 +69,7 @@ def retry_if_request_error(exception):
 	else:
 		return False
 
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
+@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000,wrap_exception=True)
 def getArticle(url):
 	article = newspaper.Article(url)
 	download_start = time.time()

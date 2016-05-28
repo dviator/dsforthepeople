@@ -8,6 +8,7 @@ import logging
 import newspaper
 import random
 from queue import Queue
+import csv
 
 class TestParseArticle(unittest.TestCase):
 
@@ -24,6 +25,9 @@ class TestParseArticle(unittest.TestCase):
 	sample_title = "With Paterno Coaching From Above, Penn St. Takes Outback Bowl"
 	sample_date = "01-01-2007"
 	sample_authors = ['Viv Bernstein'] 
+	maxDiff = None
+
+
 	#Create the directories to store results for "test" newsSource
 	def setUp(self):
 		logging.disable(logging.CRITICAL)
@@ -62,21 +66,56 @@ class TestParseArticle(unittest.TestCase):
 		testing_fullTextFileNames = os.listdir(self.fullText_dir)
 		self.assertEqual(testing_fullTextFileNames[0],filename)
 
-	def test_write_metadata_row(self):
-		sample_metadata_row = "TODO"
-		sample_header_row = "TODO"
-		metadataQueue = Queue()
-		random_num = random.getrandbits(64)
-		filename = str(random_num)
-		metadataQueue.put((self.sample_title, self.sample_date, self.url, self.sample_authors, self.newsSource, filename))
-		parsearticle.writeMetadataRow(metadataQueue)
+	#Some of this testing needs to move to testcrawler
+	# sample_metadata_row = "TODO"
+	# sample_header_row = "TODO"
+	# metadataQueue = Queue()
+	# line = metadataFile.nextline()
+	# self.assertEqual(sample_header_row,line)
+	# metadataQueue.put(())
+
+	def test_write_metadata_header(self):
+		sample_header = '''"Title"~"Date"~"URL"~"Authors"~"Source"~"fullTextID"'''	
+		sample_header_listing = ['Title','Date','URL','Authors','Source','fullTextID']
+
+		parsearticle.writeMetadataHeader(self.newsSource)
 
 		testing_metadataFileNames = os.listdir(self.metadata_dir)
-		with open(os.path.join(self.metadata_dir,testing_metadataFileNames[0])) as metadataFile:
-			metadataFile.nextline()
-			self.assertEqual(sample_header_row,line)
-			metadataFile.nextline()
-			self.assertEqual(sample_metadata_row,line)
+		with open(os.path.join(self.metadata_dir,testing_metadataFileNames[0]),'r') as metadataFile:
+			csvreader = csv.reader(metadataFile, delimiter = '~')
+			
+			for row in csvreader:
+				header = row
+				# tested_title = row[0]
+		self.assertEqual(sample_header_listing,header)
+		
+	def test_write_metadata_row(self):
+
+		sample_metadata_row = '''"With Paterno Coaching From Above, Penn St. Takes Outback Bowl"~"01-01-2007"~"http://www.nytimes.com/2007/01/01/sports/ncaafootball/01cnd-outback.html?_r=0"~"['Viv Bernstein']"~"test"~"+"'''
+		random_num = random.getrandbits(64)
+		filename = str(random_num)
+
+		parsearticle.writeMetadataRow(self.sample_title, self.sample_date, self.url, self.sample_authors, self.newsSource, filename)
+
+		testing_metadataFileNames = os.listdir(self.metadata_dir)
+		
+		with open(os.path.join(self.metadata_dir,testing_metadataFileNames[0]),'r') as metadataFile:
+			csvreader = csv.reader(metadataFile, delimiter = '~')
+			for row in csvreader:
+				tested_title = row[0]
+				tested_date = row[1]
+				tested_url = row[2]
+				tested_authors = row[3]
+				tested_newsSource = row[4]
+				tested_filename = row[5]
+
+		self.assertEqual(self.sample_title,tested_title)
+		self.assertEqual(self.sample_date,tested_date)
+		self.assertEqual(self.url,tested_url)
+		self.assertEqual(str(self.sample_authors),tested_authors)
+		self.assertEqual(self.newsSource,tested_newsSource)
+		self.assertEqual(filename,tested_filename)
+
 	@patch('newspaper.Article.parse')
 	def test_getArticle_backoff(self,mock_parse):
 		mock_parse.side_effect = [newspaper.article.ArticleException("Article Exception"),mock_parse.DEFAULT]

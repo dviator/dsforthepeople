@@ -9,15 +9,6 @@ import requests
 import os
 from retrying import retry
 
-# config = configparser.ConfigParser()
-# config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
-# start_date_year = config.getint('nytimes','start_date_year')
-# start_date_month = config.getint('nytimes','start_date_month')
-# start_date_day = config.getint('nytimes','start_date_day')
-# end_date_year = config.getint('nytimes','end_date_year')
-# end_date_month = config.getint('nytimes','end_date_month')
-# end_date_day = config.getint('nytimes','end_date_day')
-
 def getConfig():
 	config = configparser.ConfigParser()
 	config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
@@ -44,7 +35,7 @@ def crawl_nytimes_archive(queue):
 	while target_date < end_date:
 		#Set search_url based on target_date
 		search_url = "http://query.nytimes.com/svc/add/v1/sitesearch.json?end_date={0:d}{1:02d}{2:02d}&begin_date={3:d}{4:02d}{5:02d}&page=1&facet=true".format(target_date.year,target_date.month,target_date.day,target_date.year,target_date.month,target_date.day)
-		print(search_url)
+		logging.info("Search URL="+search_url)
 		date_start_time = time.time()
 		
 		page_number = 1
@@ -80,7 +71,7 @@ def crawlPage(target_date, browser, search_url, queue, page_number):
 	#If no exceptions, place article links on queue
 	else:
 		queueArticles(article_urls,queue,target_date)
-		print("Day {} Page number {} queued in {} seconds".format(target_date.strftime('%m-%d-%Y'),page_number,time.time() - page_start_time))
+		logging.info("Day {} Page number {} queued in {} seconds".format(target_date.strftime('%m-%d-%Y'),page_number,time.time() - page_start_time))
 
 	return 
 
@@ -93,16 +84,17 @@ def retry_if_request_error(exception):
 	else:
 		return False
 
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=1000,wait_exponential_max=30000,stop_max_delay=600000)
+#Use retry decorator to retry the function in the event of a network failure.
+@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
 def getSearchJSON(browser,search_url):
 	search_page = browser.get(search_url, timeout=5)
 	logging.debug("Got a search page going to return")
 	return search_page
  
 def parseSearchJSON(search_page):
-	print(type(search_page))
+	# print(type(search_page))
 	response = search_page.json()['response']
-	print(type(response))
+	# print(type(response))
 	article_urls = []
 	for snippet in response['docs']:
 		#Place article link on queue

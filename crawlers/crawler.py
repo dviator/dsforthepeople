@@ -37,13 +37,13 @@ class DownloadWorker(Thread):
 				logging.info("Parsed {} article {} in {} seconds".format(source,url,time.time()-task_start))
 
 			except newspaper.article.ArticleException as e:
-				print("I see an exception")
+				# print("I see an exception")
 				logging.exception("Exception trying to parse article at url {}".format(url))
 				pass
 			
 			self.queue.task_done()
 			i+=1
-
+			#Need to implement a function to stop these threads
 class MetadataWriterWorker(Thread):
 	pass
 

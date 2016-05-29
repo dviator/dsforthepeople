@@ -17,19 +17,24 @@ class TestCrawler(unittest.TestCase):
 		crawler.main()
 		assert mock_crawl_nytimes_archive.called
 
-	def test_DownloadWorker(self):
-		
-		# mock_parse.return_value = [crawler.newspaper.article.ArticleException]
-		# print(str(mock_parse.call_count))
-		##This Works!!! It replaces the parse function that DownloadWorker calls. Need logic to continue testing.
-		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,])
+	def test_DownloadWorker_passes_exceptions(self):
+		#Call the function with exceptions and with good ouput to ensure it continues execution
+		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,None,crawler.newspaper.article.ArticleException,crawler.newspaper.article.ArticleException])
 		queue = crawler.Queue()
 		worker = crawler.DownloadWorker(queue)
-		# print(dir(crawler))
-		# worker.run.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException])
+
+		#Call the worker as a daemon so that it exits when the test case that called it exits.
+		worker.daemon = True
 		worker.start()
-		# print(dir(crawler.parsearticle.getArticle))
-		queue.put(("BadURL","test","20070101"))
+
+		#Put 4 entries on the queue
+		for _ in range(4):
+			queue.put(("BadURL","test","20070101"))
+		#Wait until the queue is empty to stop execution
+		queue.join()
+		#Make sure a call was made to parse for each entry in the queue
+		assert crawler.parsearticle.parse.call_count == 4
+
 	# @patch('crawlers.crawler.DownloadWorker.start')
 	# @patch('crawlers.crawler.parsearticle.parse')
 	# @patch('crawlers.crawler.nytimes.crawl_nytimes_archive')

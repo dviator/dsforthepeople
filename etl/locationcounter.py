@@ -1,3 +1,7 @@
+#########################################################################################################################
+# IMPORT STATEMENTS
+#########################################################################################################################
+
 # for reading in configurations and paths
 import logging
 import configparser
@@ -16,38 +20,40 @@ import sys
 import time
 
 # Global Variables
-# global article_info
 global COUNTRIES
 global OUTFILE
 
+#########################################################################################################################
+# CONFIGURATIONS
+#########################################################################################################################
 
-#setup
+# Setup for Logging, Global Variable Definitions, 
 logging.basicConfig(filename='LocationCounter.log',level=logging.INFO,format='%(asctime)s %(levelname)s: %(message)s')
-
 config = configparser.ConfigParser()
 config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"../","crawlers/","newscrawler.conf"))
-
 data_root_dir = config.get('parsearticle','data_root_dir')
 OUTFILE = data_root_dir + "/etl_output/article_counts.csv"
 
-# Delete the output file if it currently exists
-if os.path.isfile(OUTFILE):
-	os.remove(OUTFILE)
+#########################################################################################################################
+# Function Definitions
+#########################################################################################################################
 
-#Fetch list of locations with corrresponding ISO country code
 def getCountries(): 
+	''' Fetch list of locations with corresponding ISO country code '''
+
 	countries = {}
 	locations_fn = data_root_dir + "/locations/country_codes.csv"
 	with open(locations_fn) as locationsfile:
 		reader = csv.reader(locationsfile)
 		for row in reader:
 			countries[row[0]] = row[1]
-	return countries
 
-COUNTRIES = getCountries()
+	return countries
 
 #Functions for output file formatting
 def writeMetadataHeader():
+	''' Write Header to the ETL Output File '''
+	
 	with open(OUTFILE, 'a') as csvfile:
 		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
 		articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID","Country","Count"])
@@ -55,7 +61,8 @@ def writeMetadataHeader():
 	return
 
 def writeMetadataRow(articleid, country, count):
-	#Logic for writing a metadata row, needs to be moved to a single threaded function
+	''' Logic for writing a metadata row, needs to be moved to a single threaded function '''
+	
 	csv_start = time.time()
 	logging.debug("Metadata path is {}".format(OUTFILE))
 
@@ -76,6 +83,7 @@ def writeMetadataRow(articleid, country, count):
 
 def process_file(article_path):
 	''' Process one file: count occurrences of country names in this file '''
+
 	articleid = os.path.basename(os.path.normpath(article_path))
 	with open(article_path) as inp:
 		lines = inp.readlines()
@@ -90,39 +98,53 @@ def process_file(article_path):
 		# If this country's name was found at all, print it's count to the output file
 		if flag:
 			writeMetadataRow(articleid, COUNTRIES[place], str(count))
-			# outp.write("\n" + COUNTRIES[place] + "," + str(count))
+
+	return
 
 # Function to process all files in parallel
 def process_files_parallel(paths):
 	''' process each file in via map() '''
-	print ("inside process_files_parallel()")
+
 	pool=Pool()
 	results=pool.map(process_file, paths)
 
-#Convert to lowercase
+	return
 
-#Determine which dataset to work with.
-
+#########################################################################################################################
 # Main
+#########################################################################################################################
+
 if __name__ == '__main__':
+
+	# Define some needed variables
 	data_dir = data_root_dir + "/nytimes/fullText/"
 	start=time.time()
 	paths=[]
+	COUNTRIES = getCountries()
+
+	# Delete the output file if it currently exists
+	if os.path.isfile(OUTFILE):
+		os.remove(OUTFILE)
+
+	# Create the Metadata output file
 	writeMetadataHeader()
+
+	# Get a list of paths to all articles 
 	for root, dirs, files in os.walk(data_dir, topdown=False):
 	    for name in files:
 	        paths.append(os.path.join(root, name))
 	    for name in dirs:
 	        paths.append(os.path.join(root, name))
+	
+	# Send path list to core location-counting function
 	process_files_parallel(paths)
-	# os.walk(data_dir, process_files_parallel, None)
-	# print (article_info)
-	print ("process_files_parallel() ",time.time()-start,sep=" ")
 
-# print ("counts are: ", location_counts)
-#join filename to entry in metadata table/database row
-#Write csv row or database row containing location info and article info.
-#Do the same with next file.
+	# TO-DO
+	# 1.  Determine which dataset to work with.
+	# 2.  Input original metadata to currently empty CSV output columns
+	# 3.  Refine search not just to countries, but to localities within those countries as well
+
+	print ("process_files_parallel() ",time.time()-start,sep=" ")
 
 
 

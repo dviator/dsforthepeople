@@ -6,14 +6,11 @@ from crawlers import crawler
 
 class TestCrawler(unittest.TestCase):
 
-	
-
-
 	def setUp(self):
 		logging.disable(logging.CRITICAL)
 
 	@patch('crawlers.crawler.nytimes.crawl_nytimes_archive')
-	def test_nytimes_called(self,mock_crawl_nytimes_archive):
+	def test_main_calls_link_generator_nytimes(self,mock_crawl_nytimes_archive):
 		crawler.main()
 		assert mock_crawl_nytimes_archive.called
 
@@ -35,16 +32,25 @@ class TestCrawler(unittest.TestCase):
 		#Make sure a call was made to parse for each entry in the queue
 		assert crawler.parsearticle.parse.call_count == 4
 
-	# @patch('crawlers.crawler.DownloadWorker.start')
-	# @patch('crawlers.crawler.parsearticle.parse')
-	# @patch('crawlers.crawler.nytimes.crawl_nytimes_archive')
-	# def test_DownloadWorkers_spawned(self,mock_DownloadWorker,mock_parse, mock_crawl_nytimes_archive):
-	# 	side_effects = []
-	# 	for _ in range(30):
-	# 		side_effects.append(MagicMock)
-	# 	mock_DownloadWorker.side_effect = side_effects
-	# 	crawler.main()
-	# 	print(dir(crawler.DownloadWorker))
-	# 	print(dir(mock_DownloadWorker))
-	# 	print("NumThreads="+str(crawler.numThreads))
-	# 	print(mock_DownloadWorker.call_count)
+	#Test that the metadatawriter worker properly calls it's parsearticle write methods
+	def test_metadataWriterWorker_calls_header_and_row_writes(self):
+		crawler.parsearticle.writeMetadataHeader = MagicMock()
+		crawler.parsearticle.writeMetadataRow = MagicMock()
+
+		metadataQueue = crawler.Queue()
+		for _ in range(3):
+			metadataQueue.put(("DummyData","DummyData","DummyData","DummyData","DummyData","DummyData"))
+
+		metadataWorker = crawler.MetadataWriterWorker(metadataQueue,"test")
+		metadataWorker.daemon = True
+		metadataWorker.start()
+
+		assert crawler.parsearticle.writeMetadataHeader.call_count == 1
+		assert crawler.parsearticle.writeMetadataRow.call_count == 3
+		#Fetches metadata fields from a queue
+		#Writes them to a file
+
+	#Need to test that the main program properly instantiates the metadataWriterWorker
+	#This includes proper queues and later on, 1 thread per newsSource
+	def test_main_spawns_metadataWriterWorker(self):
+		assert False

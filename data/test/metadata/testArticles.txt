@@ -1,0 +1,2 @@
+"Title"~"Date"~"URL"~"Authors"~"Source"~"fullTextID"
+"With Paterno Coaching From Above, Penn St. Takes Outback Bowl"~"01-01-2007"~"http://www.nytimes.com/2007/01/01/sports/ncaafootball/01cnd-outback.html?_r=0"~"['Viv Bernstein']"~"test"~"3304301461265494004"

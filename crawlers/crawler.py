@@ -20,9 +20,10 @@ newsSource = config.get('crawler','newsSource')
 
 class DownloadWorker(Thread):
 	
-	def __init__(self, queue):
+	def __init__(self, queue, metadataQueue):
 		Thread.__init__(self)
 		self.queue = queue
+		self.metadataQueue = metadataQueue
 
 	def run(self):
 		i = 0
@@ -35,7 +36,11 @@ class DownloadWorker(Thread):
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
 				logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
 			try:
-				parsearticle.parse(url, source, urlDate)
+				title, date, url, authors, newsSource, article_text_filename = parsearticle.parse(url, source, urlDate)
+				# print("I got from parse {},{},{},{},{},{}".format(title,date,url,authors,newsSource,article_text_filename))
+				self.metadataQueue.put((title, date, url, authors, newsSource, article_text_filename))
+				# print(self.metadataQueue.qsize())
+
 				logging.info("Parsed {} article {} in {} seconds".format(source,url,time.time()-task_start))
 
 			except newspaper.article.ArticleException as e:
@@ -46,6 +51,7 @@ class DownloadWorker(Thread):
 			self.queue.task_done()
 			i+=1
 			#Need to implement a function to stop these threads
+
 class MetadataWriterWorker(Thread):
 	
 	def __init__(self, metadataQueue,newsSource):
@@ -65,15 +71,24 @@ def main():
 	ts = time.time()
 	#Create queue to communicate with worker threads
 	queue = Queue()
-	#Create numThreads Worker Threads
+	metadataQueue = Queue()
+	#Create numThreads Worker Threads to download files and write out their fulltext
 	for x in range(numThreads):
-		worker = DownloadWorker(queue)
+		worker = DownloadWorker(queue,metadataQueue)
 		worker.daemon = True
 		worker.start()
-		# print("Started worker")
+
+	#Create a single metadataWorker to write metadata in a single thread as articles are donwloaded
+	metadataWorker = MetadataWriterWorker(metadataQueue,newsSource)
+	metadataWorker.daemon = True
+	metadataWorker.start()
+	#Will need a loop around this if there are to be multiple newsSource running concurrently.
+
 	#Call source specific crawler(s) to enqueue tasks
 	logging.info("Begin queueing links")
 	nytimes.crawl_nytimes_archive(queue)
+
+	#Start metadata
 	queue.join()
 	logging.info('Took {} seconds to parse complete source'.format(time.time() -ts))
 

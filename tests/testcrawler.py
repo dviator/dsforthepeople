@@ -6,6 +6,8 @@ from crawlers import crawler
 
 class TestCrawler(unittest.TestCase):
 
+	dummyMetadata = ("DummyData1","DummyData2","DummyData3","DummyData4","DummyData5","DummyData6")
+	dummyLinkData = ("BadURL","test","20070101")
 	def setUp(self):
 		logging.disable(logging.CRITICAL)
 
@@ -16,9 +18,11 @@ class TestCrawler(unittest.TestCase):
 
 	def test_DownloadWorker_passes_exceptions(self):
 		#Call the function with exceptions and with good ouput to ensure it continues execution
-		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,None,crawler.newspaper.article.ArticleException,crawler.newspaper.article.ArticleException])
+		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,self.dummyMetadata,crawler.newspaper.article.ArticleException,crawler.newspaper.article.ArticleException])
+		crawler.parsearticle.parse.start()
 		queue = crawler.Queue()
-		worker = crawler.DownloadWorker(queue)
+		metadataQueue = crawler.Queue()
+		worker = crawler.DownloadWorker(queue,metadataQueue)
 
 		#Call the worker as a daemon so that it exits when the test case that called it exits.
 		worker.daemon = True
@@ -26,11 +30,13 @@ class TestCrawler(unittest.TestCase):
 
 		#Put 4 entries on the queue
 		for _ in range(4):
-			queue.put(("BadURL","test","20070101"))
+			queue.put(self.dummyLinkData)
 		#Wait until the queue is empty to stop execution
 		queue.join()
+		crawler.parsearticle.parse.stop()
 		#Make sure a call was made to parse for each entry in the queue
 		assert crawler.parsearticle.parse.call_count == 4
+
 
 	#Test that the metadatawriter worker properly calls it's parsearticle write methods
 	def test_metadataWriterWorker_calls_header_and_row_writes(self):
@@ -39,7 +45,7 @@ class TestCrawler(unittest.TestCase):
 
 		metadataQueue = crawler.Queue()
 		for _ in range(3):
-			metadataQueue.put(("DummyData","DummyData","DummyData","DummyData","DummyData","DummyData"))
+			metadataQueue.put(self.dummyMetadata)
 
 		metadataWorker = crawler.MetadataWriterWorker(metadataQueue,"test")
 		metadataWorker.daemon = True
@@ -52,5 +58,20 @@ class TestCrawler(unittest.TestCase):
 
 	#Need to test that the main program properly instantiates the metadataWriterWorker
 	#This includes proper queues and later on, 1 thread per newsSource
-	def test_main_spawns_metadataWriterWorker(self):
-		assert False
+	def test_DownloadWorker_returns_metadata(self):
+		queue = crawler.Queue()
+		metadataQueue = crawler.Queue()
+
+		crawler.parsearticle.parse = MagicMock(return_value=self.dummyMetadata)
+			#Call the worker as a daemon so that it exits when the test case that called it exits.
+		worker = crawler.DownloadWorker(queue,metadataQueue)
+		worker.daemon = True
+		worker.start()
+		# print(metadataQueue.qsize())
+		#Wait until the queue is empty to stop execution
+		queue.put(self.dummyLinkData)
+		
+		testedMetadataRow = metadataQueue.get()
+		# print(testedMetadataRow)
+		queue.join()
+		self.assertEqual(self.dummyMetadata,testedMetadataRow)

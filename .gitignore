@@ -5,3 +5,4 @@ tests/__pycache__/
 data/locations/allCountries.txt
 *.pyc
 helpme
+data/nytimes/

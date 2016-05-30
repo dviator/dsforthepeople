@@ -16,6 +16,7 @@ crawlLogger = logging.basicConfig(filename=root_path+'/NewsCrawler.log',level=lo
 config = configparser.ConfigParser()
 config.read(root_path+"/newscrawler.conf")
 numThreads = config.getint('crawler','threads') 
+newsSource = config.get('crawler','newsSource')
 
 class DownloadWorker(Thread):
 	
@@ -29,6 +30,7 @@ class DownloadWorker(Thread):
 		while True:
 			url, source, urlDate = self.queue.get()
 			task_start = time.time()
+			#Use modulo counter to print aggregated runtime stats
 			if i % 100 == 0:
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
 				logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
@@ -45,7 +47,19 @@ class DownloadWorker(Thread):
 			i+=1
 			#Need to implement a function to stop these threads
 class MetadataWriterWorker(Thread):
-	pass
+	
+	def __init__(self, metadataQueue,newsSource):
+		Thread.__init__(self)
+		self.metadataQueue = metadataQueue
+		self.newsSource = newsSource
+
+	def run(self):
+		parsearticle.writeMetadataHeader(self.newsSource)
+		while True:
+			title, date, url, authors, newsSource, article_text_filename = self.metadataQueue.get()
+			parsearticle.writeMetadataRow(title, date, url, authors, newsSource, article_text_filename)
+			self.metadataQueue.task_done()
+
 
 def main():
 	ts = time.time()

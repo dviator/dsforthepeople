@@ -40,7 +40,6 @@ class TestParseArticle(unittest.TestCase):
 	#Delete previously created directories to ensure clean environment.
 	def tearDown(self):
 		shutil.rmtree(self.test_data_dir)
-		pass
 
 	def test_writes_fulltext_file(self):
 		#Run the parse on an article.

@@ -38,12 +38,16 @@ def parse(url, newsSource, urldate):
 	return title, date, url, authors, newsSource, article_text_filename
 	
 def writeMetadataHeader(newsSource):
-	metadata_path = data_root_dir + "/" + newsSource + "/metadata/" + newsSource + "Articles.txt"
+	metadata_dir = data_root_dir + "/" + newsSource + "/metadata/" 
+	metadata_file = metadata_dir + newsSource + "Articles.txt"
 	#If file doesn't exist write column names in first row
-	# if not os.path.isfile(metadata_path):
-	with open(metadata_path, 'a') as csvfile:
-		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
-		articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID"])
+	if not os.path.exists(metadata_dir):
+		os.makedirs(metadata_dir)
+
+	if os.path.isfile(metadata_file) is False:
+		with open(metadata_file, 'a') as csvfile:
+			articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
+			articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID"])
 
 	return
 

@@ -69,7 +69,7 @@ def retry_if_request_error(exception):
 	else:
 		return False
 
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000,wrap_exception=True)
+@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
 def getArticle(url):
 	article = newspaper.Article(url)
 	download_start = time.time()

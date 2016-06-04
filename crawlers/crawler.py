@@ -5,6 +5,7 @@ import logging
 import configparser
 import newspaper
 import os
+import retrying
 
 from crawlers import parsearticle 
 from crawlers import nytimes
@@ -34,8 +35,8 @@ class DownloadWorker(Thread):
 			#Use modulo counter to print aggregated runtime stats
 			if i % 100 == 0:
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
-				logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
 			try:
+				logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
 				title, date, url, authors, newsSource, article_text_filename = parsearticle.parse(url, source, urlDate)
 				# print("I got from parse {},{},{},{},{},{}".format(title,date,url,authors,newsSource,article_text_filename))
 				self.metadataQueue.put((title, date, url, authors, newsSource, article_text_filename))
@@ -50,7 +51,7 @@ class DownloadWorker(Thread):
 			
 			self.queue.task_done()
 			i+=1
-			#Need to implement a function to stop these threads
+			
 
 class MetadataWriterWorker(Thread):
 	

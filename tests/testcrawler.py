@@ -18,7 +18,7 @@ class TestCrawler(unittest.TestCase):
 
 	def test_DownloadWorker_passes_exceptions(self):
 		#Call the function with exceptions and with good ouput to ensure it continues execution
-		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,self.dummyMetadata,crawler.newspaper.article.ArticleException,crawler.newspaper.article.ArticleException])
+		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,self.dummyMetadata,crawler.newspaper.article.ArticleException,self.dummyMetadata])
 		crawler.parsearticle.parse.start()
 		queue = crawler.Queue()
 		metadataQueue = crawler.Queue()

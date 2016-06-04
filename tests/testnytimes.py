@@ -114,6 +114,26 @@ class TestNYTimes(unittest.TestCase):
 		mock_get.side_effect = requests.exceptions.MissingSchema("Missing Schema Error")
 		nytimes.crawlPage(self.target_date, self.browser, self.search_url, missingSchemaQueue, 1)
 
+		
+	@patch('crawlers.nytimes.getSearchJSON')
+	@patch('crawlers.nytimes.parseSearchJSON')
+	def test_crawlPage_passes_ValueError_exception(self,mock_parse,mock_get):
+		queue = Queue()
+		mock_get.return_value = 0
+		mock_parse.side_effect = ValueError("ValueError raised in search page JSON")
+		#Check that the function returns cleanly (which equates to a return value of None in python)
+		self.assertIsNone(nytimes.crawlPage(self.target_date,self.browser,self.search_url,queue,1))
+
+	@patch('crawlers.nytimes.getSearchJSON')
+	@patch('crawlers.nytimes.parseSearchJSON')
+	def test_crawlPage_passes_KeyError_exception(self,mock_parse,mock_get):
+		queue = Queue()
+		mock_get.return_value = 0
+		mock_parse.side_effect = KeyError("KeyError raised in search page JSON")
+		#Check that the function returns cleanly (which equates to a return value of None in python)
+		self.assertIsNone(nytimes.crawlPage(self.target_date,self.browser,self.search_url,queue,1))
+
+
 
 if __name__ == '__main__':
     unittest.main()

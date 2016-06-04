@@ -65,7 +65,7 @@ def crawlPage(target_date, browser, search_url, queue, page_number):
 	#Parse article URLS from searchJSON
 	try:
 		article_urls = parseSearchJSON(search_page)
-	except KeyError:
+	except (KeyError,ValueError):
 		logging.exception('Search page at url: {} had malformed response'.format(search_url))
 		return
 	#If no exceptions, place article links on queue
@@ -91,13 +91,13 @@ def getSearchJSON(browser,search_url):
 	logging.debug("Got a search page going to return")
 	return search_page
  
+ #Parses JSON packet returned by each page and returns a list of urls for articles
 def parseSearchJSON(search_page):
 	# print(type(search_page))
 	response = search_page.json()['response']
 	# print(type(response))
 	article_urls = []
 	for snippet in response['docs']:
-		#Place article link on queue
 		article_url = snippet['web_url']
 		article_urls.append(article_url)
 	return article_urls
@@ -105,4 +105,5 @@ def parseSearchJSON(search_page):
 
 def queueArticles(article_urls,queue,target_date):
 	for article_url in article_urls:
+		logging.info("Queued Article at {}".format(article_url))
 		queue.put((article_url,"nytimes",target_date))

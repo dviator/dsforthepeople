@@ -33,6 +33,7 @@ config = configparser.ConfigParser()
 config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"../","crawlers/","newscrawler.conf"))
 data_root_dir = config.get('parsearticle','data_root_dir')
 OUTFILE = data_root_dir + "/etl_output/article_counts.csv"
+METADATAFILE = data_root_dir + "/nytimes/metadata/nytimesArticles.txt"
 
 #########################################################################################################################
 # Function Definitions
@@ -51,10 +52,10 @@ def getCountries():
 	return countries
 
 #Functions for output file formatting
-def writeMetadataHeader():
+def writeMetadataHeader(filename):
 	''' Write Header to the ETL Output File '''
 	
-	with open(OUTFILE, 'a') as csvfile:
+	with open(filename, 'a') as csvfile:
 		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
 		articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID","Country","Count"])
 	
@@ -80,6 +81,56 @@ def writeMetadataRow(articleid, country, count):
 	logging.debug("CSV write completed to {} in {} seconds".format(OUTFILE,time.time()- csv_start))
 	
 	return
+
+def readMetadata():
+	''' return a dict containing meta-data from crawler, to be put into output csv file '''
+	metadict = {}
+	with open(METADATAFILE, 'r') as metafile:
+		metareader = csv.DictReader(metafile, delimiter="~", quoting=csv.QUOTE_ALL)
+		for row in metareader:
+			metadict.update({
+
+				row['fullTextID']:
+
+				{'Title': row['Title'], 
+				'Date': row['Date'], 
+				'URL': row['URL'], 
+				'Authors': row['Authors'], 
+				'Source': row['Source'],
+				'fullTextID': row['fullTextID'],
+				'Country': '',
+				'Count': ''}
+			})
+
+	return metadict
+
+def writeMetadataFile():
+	''' concatenate counts of country names in each article with its corresponding metadata for final output '''
+	tempfilename = OUTFILE + ".tmp"
+	metadict = readMetadata() 
+	with open(tempfilename, 'a') as tempfile:
+		metawriter = csv.writer(tempfile, delimiter="~", quoting=csv.QUOTE_ALL)
+		with open(OUTFILE, 'r') as countfile:
+			countreader = csv.DictReader(countfile, delimiter="~", quoting=csv.QUOTE_ALL)
+			for row in countreader:
+				key = row['fullTextID']
+				if key in metadict:
+					metadict[key]['Country'] = row['Country']
+					metadict[key]['Count']   = row['Count']
+					metawriter.writerow(
+						[metadict[key]['Title'],
+						metadict[key]['Date'],
+						metadict[key]['URL'],
+						metadict[key]['Authors'],
+						metadict[key]['Source'],
+						metadict[key]['fullTextID'],
+						metadict[key]['Country'],
+						metadict[key]['Count']]
+						)
+
+	return
+
+
 
 def process_file(article_path):
 	''' Process one file: count occurrences of country names in this file '''
@@ -123,11 +174,12 @@ if __name__ == '__main__':
 	COUNTRIES = getCountries()
 
 	# Delete the output file if it currently exists
-	if os.path.isfile(OUTFILE):
-		os.remove(OUTFILE)
+	# if os.path.isfile(OUTFILE):
+	# 	os.remove(OUTFILE)
 
 	# Create the Metadata output file
-	writeMetadataHeader()
+	writeMetadataHeader(OUTFILE)
+	writeMetadataHeader(OUTFILE + ".tmp")
 
 	# Get a list of paths to all articles 
 	for root, dirs, files in os.walk(data_dir, topdown=False):
@@ -137,7 +189,10 @@ if __name__ == '__main__':
 	        paths.append(os.path.join(root, name))
 	
 	# Send path list to core location-counting function
-	process_files_parallel(paths)
+	# process_files_parallel(paths)
+
+	# Concatenate Metadata
+	writeMetadataFile()
 
 	# TO-DO
 	# 1.  Determine which dataset to work with.

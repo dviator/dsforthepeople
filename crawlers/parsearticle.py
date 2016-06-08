@@ -8,6 +8,7 @@ import datetime
 import configparser
 import sys
 from retrying import retry
+import hashlib
 
 config = configparser.ConfigParser()
 config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
@@ -31,7 +32,7 @@ def parse(url, newsSource, urldate):
 	#Format date to be the same whether it's from url or Newspaper
 	date = date.strftime('%m-%d-%Y')
 
-	article_text_filename = writeFullTextFile(newsSource,text)
+	article_text_filename = writeFullTextFile(newsSource,title,date,text)
 	logging.info("Parse function of url {} completed in {} seconds".format(url,time.time()- complete_parse_start))
 
 	#Send metadata about the article back to main thread to be written to central file
@@ -40,10 +41,12 @@ def parse(url, newsSource, urldate):
 def writeMetadataHeader(newsSource):
 	metadata_dir = data_root_dir + "/" + newsSource + "/metadata/" 
 	metadata_file = metadata_dir + newsSource + "Articles.txt"
-	#If file doesn't exist write column names in first row
+	
+	#If data directory doesn't exist write it. 
 	if not os.path.exists(metadata_dir):
 		os.makedirs(metadata_dir)
 
+	#If file doesn't exist write column names in first row
 	if os.path.isfile(metadata_file) is False:
 		with open(metadata_file, 'a') as csvfile:
 			articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
@@ -86,11 +89,19 @@ def getArticle(url):
 	logging.debug("Parse completed in {} seconds".format(time.time()- parse_start))
 	return article
 
-def writeFullTextFile(newsSource,text):
+def writeFullTextFile(newsSource,title,date,text):
+	#Planned for removal
 	#Use a randomized surrogate key to identify each fullText file in the metadata table
 	#Write this key as a filename for reference later
-	random_num = random.getrandbits(64)
-	article_text_filename = str(random_num)
+	# random_num = random.getrandbits(64)
+	# article_text_filename = str(random_num)
+
+	#Compute a hash value for filename based on title,newsSource,date to store deterministic uniquely keyed file
+	article_id = title + newsSource + str(date)
+	article_id = article_id.encode('utf-16')
+	hasher = hashlib.md5()
+	hasher.update(article_id)
+	article_text_filename = hasher.hexdigest()
 
 	full_text_path =data_root_dir + "/" + newsSource + "/fullText/"
 	logging.debug("Full text path is {}".format(full_text_path))

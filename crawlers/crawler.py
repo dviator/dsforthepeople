@@ -5,7 +5,7 @@ import logging
 import configparser
 import newspaper
 import os
-import retrying
+
 
 from crawlers import parsearticle 
 from crawlers import nytimes
@@ -49,6 +49,10 @@ class DownloadWorker(Thread):
 				logging.exception("Exception trying to parse article at url {}".format(url))
 				pass
 			
+			except FileExistsError:
+				logging.warning("Skipped fullTextWrite and metadata queueing for duplicate filename on {} article at url {}".format(source,url))
+				pass
+
 			self.queue.task_done()
 			i+=1
 			

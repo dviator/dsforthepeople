@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import retrying
 import logging
 from crawlers import crawler
-
+import time
 class TestCrawler(unittest.TestCase):
 
 	dummyMetadata = ("DummyData1","DummyData2","DummyData3","DummyData4","DummyData5","DummyData6")
@@ -16,9 +16,9 @@ class TestCrawler(unittest.TestCase):
 		crawler.main()
 		assert mock_crawl_nytimes_archive.called
 
-	def test_DownloadWorker_passes_exceptions(self):
+	def test_DownloadWorker_bypasses_ArticleException_and_FileExistsError(self):
 		#Call the function with exceptions and with good ouput to ensure it continues execution
-		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,self.dummyMetadata,crawler.newspaper.article.ArticleException,self.dummyMetadata])
+		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,FileExistsError,self.dummyMetadata])
 		crawler.parsearticle.parse.start()
 		queue = crawler.Queue()
 		metadataQueue = crawler.Queue()
@@ -29,14 +29,17 @@ class TestCrawler(unittest.TestCase):
 		worker.start()
 
 		#Put 4 entries on the queue
-		for _ in range(4):
+		for _ in range(3):
 			queue.put(self.dummyLinkData)
 		#Wait until the queue is empty to stop execution
 		queue.join()
+
+		#Unmock the method to return it to normal for other tests		
 		crawler.parsearticle.parse.stop()
 		#Make sure a call was made to parse for each entry in the queue
-		assert crawler.parsearticle.parse.call_count == 4
-
+		assert crawler.parsearticle.parse.call_count == 3
+		#Make sure each entry in the queue was processed and the call to queue.task_done was made
+		assert queue.qsize() == 0
 
 	#Test that the metadatawriter worker properly calls it's parsearticle write methods
 	def test_metadataWriterWorker_calls_header_and_row_writes(self):

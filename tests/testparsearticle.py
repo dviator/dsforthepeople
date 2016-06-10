@@ -123,3 +123,7 @@ class TestParseArticle(unittest.TestCase):
 
 		self.assertIsNotNone(article)
 
+	def test_duplicate_article_fullText_write_caught(self):
+		parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")
+		with self.assertRaises(FileExistsError):
+			parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")

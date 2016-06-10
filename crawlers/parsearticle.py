@@ -103,13 +103,16 @@ def writeFullTextFile(newsSource,title,date,text):
 	hasher.update(article_id)
 	article_text_filename = hasher.hexdigest()
 
-	full_text_path =data_root_dir + "/" + newsSource + "/fullText/"
+	#Determine directory and filenaming, create fullText directory for source if it does not exist
+	full_text_path = data_root_dir + "/" + newsSource + "/fullText/"
+	full_text_file = os.path.join(full_text_path,article_text_filename)
 	logging.debug("Full text path is {}".format(full_text_path))
 	text_start = time.time()
 	if not os.path.exists(full_text_path):
 		os.makedirs(full_text_path)
 
-	with open(os.path.join(full_text_path,article_text_filename), 'w') as fullTextFile:
+	#Open file with mode 'x', exclusive creation, will raise error if file already exists.
+	with open(full_text_file, 'x') as fullTextFile:
 		fullTextFile.write(text)
 
 	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))

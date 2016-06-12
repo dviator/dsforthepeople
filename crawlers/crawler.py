@@ -6,7 +6,6 @@ import configparser
 import newspaper
 import os
 
-
 from crawlers import parsearticle 
 from crawlers import nytimes
 
@@ -37,9 +36,10 @@ class DownloadWorker(Thread):
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
 			try:
 				logging.info("Calling parse with args: {}, {}, {}".format(url,source,urlDate))
-				title, date, url, authors, newsSource, article_text_filename = parsearticle.parse(url, source, urlDate)
+				# title, date, url, authors, newsSource, article_text_filename = parsearticle.parse(url, source, urlDate)
+				parsearticle.parse(url, source, urlDate, self.metadataQueue)
 				# print("I got from parse {},{},{},{},{},{}".format(title,date,url,authors,newsSource,article_text_filename))
-				self.metadataQueue.put((title, date, url, authors, newsSource, article_text_filename))
+				# self.metadataQueue.put((title, date, url, authors, newsSource, article_text_filename))
 				# print(self.metadataQueue.qsize())
 
 				logging.info("Parsed {} article {} in {} seconds".format(source,url,time.time()-task_start))
@@ -95,6 +95,8 @@ def main():
 
 	#Start metadata
 	queue.join()
+	#Adding so program doesn't stop writing once link queue is done, but continues till all queued items are handled.
+	metadataQueue.join()
 	logging.info('Took {} seconds to parse complete source'.format(time.time() -ts))
 
 

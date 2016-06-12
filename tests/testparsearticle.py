@@ -43,8 +43,9 @@ class TestParseArticle(unittest.TestCase):
 		pass
 
 	def test_writes_fulltext_file(self):
+		metadataQueue = Queue()
 		#Run the parse on an article.
-		parsearticle.parse(self.url,self.newsSource,self.urldate)
+		parsearticle.parse(self.url,self.newsSource,self.urldate,metadataQueue)
 		#Fetch the file that the run should've written and store it's string contents in testing_fullText
 		testing_fullTextFileNames = os.listdir(self.fullText_dir)
 		testing_fullTextFileName = testing_fullTextFileNames.pop()
@@ -55,8 +56,11 @@ class TestParseArticle(unittest.TestCase):
 		self.assertEqual(self.sample_fullText,testing_fullText)
 
 	#Test that the parse function returns the data necessary for another thread to write it to the metadata csv
-	def test_returns_metadata_row(self):
-		title, date, url, authors, newsSource, filename = parsearticle.parse(self.url,self.newsSource,self.urldate)
+	def test_queues_metadata_row(self):
+		metadataQueue = Queue()
+
+		parsearticle.parse(self.url,self.newsSource,self.urldate, metadataQueue)
+		title, date, url, authors, newsSource, filename = metadataQueue.get()
 		self.assertEqual(self.sample_title,title)
 		self.assertEqual(self.sample_date,date)
 		self.assertEqual(self.url,url)

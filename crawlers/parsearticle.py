@@ -15,11 +15,12 @@ config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler
 data_root_dir = config.get('parsearticle','data_root_dir')
 
 
-def parse(url, newsSource, urldate):
-	complete_parse_start = time.time()
+def parse(url, newsSource, urlDate, metadataQueue):
+	logging.info("Calling parse with args: {}, {}, {}".format(url,newsSource,urlDate))
+	parse_start = time.time()
 	#Collect data about each article
 	article = getArticle(url)
-
+	logging.info("{} seconds to download article: {}".format(time.time()-parse_start,url))
 	#Store metadata to variables
 	title = article.title
 	authors = article.authors
@@ -28,16 +29,64 @@ def parse(url, newsSource, urldate):
 
 	#If Newspaper can't get the date from the article use the one from the search URL
 	if date is None:
-		date = urldate
+		date = urlDate
 	#Format date to be the same whether it's from url or Newspaper
 	date = date.strftime('%m-%d-%Y')
 
 	article_text_filename = writeFullTextFile(newsSource,title,date,text)
-	logging.info("Parse function of url {} completed in {} seconds".format(url,time.time()- complete_parse_start))
 
 	#Send metadata about the article back to main thread to be written to central file
-	return title, date, url, authors, newsSource, article_text_filename
+	#return title, date, url, authors, newsSource, article_text_filename
 	
+	#Instead, put this info directly on queue, to avoid passing back to main program
+	metadataQueue.put((title, date, url, authors, newsSource, article_text_filename))
+	logging.info("{} seconds to complete parse of article: {}".format(time.time()-parse_start,url))
+	return
+
+def writeFullTextFile(newsSource,title,date,text):
+
+	#Compute a hash value for filename based on title,newsSource,date to store deterministic uniquely keyed file
+	article_id = title + newsSource + str(date)
+	article_id = article_id.encode('utf-16')
+	hasher = hashlib.md5()
+	hasher.update(article_id)
+	article_text_filename = hasher.hexdigest()
+
+	#Determine directory and filenaming, create fullText directory for source if it does not exist
+	full_text_path = data_root_dir + "/" + newsSource + "/fullText/"
+	full_text_file = os.path.join(full_text_path,article_text_filename)
+	logging.debug("Full text path is {}".format(full_text_path))
+	text_start = time.time()
+	if not os.path.exists(full_text_path):
+		os.makedirs(full_text_path)
+
+	#Open file with mode 'x', exclusive creation, will raise error if file already exists.
+	with open(full_text_file, 'x') as fullTextFile:
+		fullTextFile.write(text)
+
+	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))
+
+	return article_text_filename
+
+def retry_if_request_error(exception):
+	if isinstance(exception,newspaper.article.ArticleException):
+		return True
+	else:
+		return False
+
+@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
+def getArticle(url):
+	article = newspaper.Article(url)
+	download_start = time.time()
+	article.download()
+	parse_start = time.time()
+	article.parse()
+	logging.info("Downloading article at {} completed in {} seconds".format(url, time.time()- download_start))	
+	# print(article)
+	# print(dir(article))
+	logging.debug("Parse completed in {} seconds".format(time.time()- parse_start))
+	return article
+
 def writeMetadataHeader(newsSource):
 	metadata_dir = data_root_dir + "/" + newsSource + "/metadata/" 
 	metadata_file = metadata_dir + newsSource + "Articles.txt"
@@ -69,52 +118,3 @@ def writeMetadataRow(title, date, url, authors, newsSource, article_text_filenam
 	return
 
 	#Write plaintext of article into file named with surrogate key reference to metadata entry in metadata file
-
-def retry_if_request_error(exception):
-	if isinstance(exception,newspaper.article.ArticleException):
-		return True
-	else:
-		return False
-
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
-def getArticle(url):
-	article = newspaper.Article(url)
-	download_start = time.time()
-	article.download()
-	parse_start = time.time()
-	article.parse()
-	logging.info("Downloading article at {} completed in {} seconds".format(url, time.time()- download_start))	
-	# print(article)
-	# print(dir(article))
-	logging.debug("Parse completed in {} seconds".format(time.time()- parse_start))
-	return article
-
-def writeFullTextFile(newsSource,title,date,text):
-	#Planned for removal
-	#Use a randomized surrogate key to identify each fullText file in the metadata table
-	#Write this key as a filename for reference later
-	# random_num = random.getrandbits(64)
-	# article_text_filename = str(random_num)
-
-	#Compute a hash value for filename based on title,newsSource,date to store deterministic uniquely keyed file
-	article_id = title + newsSource + str(date)
-	article_id = article_id.encode('utf-16')
-	hasher = hashlib.md5()
-	hasher.update(article_id)
-	article_text_filename = hasher.hexdigest()
-
-	#Determine directory and filenaming, create fullText directory for source if it does not exist
-	full_text_path = data_root_dir + "/" + newsSource + "/fullText/"
-	full_text_file = os.path.join(full_text_path,article_text_filename)
-	logging.debug("Full text path is {}".format(full_text_path))
-	text_start = time.time()
-	if not os.path.exists(full_text_path):
-		os.makedirs(full_text_path)
-
-	#Open file with mode 'x', exclusive creation, will raise error if file already exists.
-	with open(full_text_file, 'x') as fullTextFile:
-		fullTextFile.write(text)
-
-	logging.debug("Full text write to {} completed in {} seconds".format(full_text_path,time.time()- text_start))
-
-	return article_text_filename

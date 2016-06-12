@@ -61,20 +61,23 @@ class TestCrawler(unittest.TestCase):
 
 	#Need to test that the main program properly instantiates the metadataWriterWorker
 	#This includes proper queues and later on, 1 thread per newsSource
-	def test_DownloadWorker_returns_metadata(self):
-		queue = crawler.Queue()
-		metadataQueue = crawler.Queue()
+	#Commenting out as moved queuing function into parsearticle.
+	#Crawler now just calls parse and passes it the metadataQueue object, and trust parse to complete the queuing or return an error.
+	# def test_DownloadWorker_returns_metadata(self):
+	# 	queue = crawler.Queue()
+	# 	metadataQueue = crawler.Queue()
 
-		crawler.parsearticle.parse = MagicMock(return_value=self.dummyMetadata)
-			#Call the worker as a daemon so that it exits when the test case that called it exits.
-		worker = crawler.DownloadWorker(queue,metadataQueue)
-		worker.daemon = True
-		worker.start()
-		# print(metadataQueue.qsize())
-		#Wait until the queue is empty to stop execution
-		queue.put(self.dummyLinkData)
+	# 	crawler.parsearticle.parse = MagicMock(return_value=self.dummyMetadata)
+	# 		#Call the worker as a daemon so that it exits when the test case that called it exits.
+	# 	worker = crawler.DownloadWorker(queue,metadataQueue)
+	# 	worker.daemon = True
+	# 	worker.start()
+	# 	# print(metadataQueue.qsize())
+	# 	#Wait until the queue is empty to stop execution
+	# 	queue.put(self.dummyLinkData)
 		
-		testedMetadataRow = metadataQueue.get()
-		# print(testedMetadataRow)
-		queue.join()
-		self.assertEqual(self.dummyMetadata,testedMetadataRow)
+	# 	testedMetadataRow = metadataQueue.get()
+	# 	# print(testedMetadataRow)
+	# 	queue.join()
+
+	# 	self.assertEqual(self.dummyMetadata,testedMetadataRow)

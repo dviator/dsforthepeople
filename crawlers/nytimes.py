@@ -9,6 +9,13 @@ import requests
 import os
 from retrying import retry
 
+#Not working logger experiment
+# root_path = os.path.abspath(os.path.dirname(__file__))
+# nytimesLogger = logging.basicConfig(filename=root_path+'/nytimesLinkGenerator.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s: %(message)s')
+
+crawl_ledger = logging.getLogger('crawl_ledger')
+
+
 def getConfig():
 	config = configparser.ConfigParser()
 	config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
@@ -61,18 +68,20 @@ def crawlPage(target_date, browser, search_url, queue, page_number):
 		search_page = getSearchJSON(browser, search_url)
 	except requests.exceptions.MissingSchema:
 		logging.exception("nytimes queueing Error on page: {}".format(search_url))
+		crawl_ledger.warning("{} skipped, due to requests.exceptions.MissingSchema".format(search_url))
 		return
 	#Parse article URLS from searchJSON
 	try:
 		article_urls = parseSearchJSON(search_page)
 	except (KeyError,ValueError):
 		logging.exception('Search page at url: {} had malformed response'.format(search_url))
+		crawl_ledger.warning("{} skipped, due to unreadable searchJSON data".format(search_url))
 		return
 	#If no exceptions, place article links on queue
 	else:
 		queueArticles(article_urls,queue,target_date)
 		logging.info("Day {} Page number {} queued in {} seconds".format(target_date.strftime('%m-%d-%Y'),page_number,time.time() - page_start_time))
-
+		crawl_ledger.debug("{} successfully sent to parse queue".format(search_url))
 	return 
 
 

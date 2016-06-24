@@ -9,6 +9,7 @@ import newspaper
 import random
 from queue import Queue
 import csv
+import timeout_decorator
 
 class TestParseArticle(unittest.TestCase):
 
@@ -126,6 +127,18 @@ class TestParseArticle(unittest.TestCase):
 		article = parsearticle.getArticle(self.url)
 
 		self.assertIsNotNone(article)
+
+	#Test for exception disambiguation in parsearticle
+	# #Use timeout decorator as a workaround because failing test will cause 10 minutes of retrying.
+	# @timeout_decorator.timeout(5)
+	# def test_getArticle_backoff_does_not_retry_410_not_found_bad_html(self):
+	# 	good_url = self.url
+	# 	bad_url = "http://www.nytimes.com/aponline/2014/10/08/world/middleeast/ap-cn-canada-terrorism-threats.html"
+
+	# 	with self.assertRaises(newspaper.article.ArticleException):
+	# 		bad_article = parsearticle.getArticle(bad_url)
+
+
 
 	def test_duplicate_article_fullText_write_caught(self):
 		parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")

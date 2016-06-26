@@ -174,8 +174,8 @@ if __name__ == '__main__':
 	COUNTRIES = getCountries()
 
 	# Delete the output file if it currently exists
-	# if os.path.isfile(OUTFILE):
-	# 	os.remove(OUTFILE)
+	if os.path.isfile(OUTFILE):
+		os.remove(OUTFILE)
 
 	# Create the Metadata output file
 	writeMetadataHeader(OUTFILE)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
 	        paths.append(os.path.join(root, name))
 	
 	# Send path list to core location-counting function
-	# process_files_parallel(paths)
+	process_files_parallel(paths)
 
 	# Concatenate Metadata
 	writeMetadataFile()

@@ -103,7 +103,7 @@ class MetadataWriterWorker(Thread):
 		self.newsSource = newsSource
 
 	def run(self):
-		logging.info("MetadataWriterWorker started for {}".format(newsSource))
+		logging.info("MetadataWriterWorker started for {}".format(self.newsSource))
 		print("MetadataWriterWorker.run started")
 		parsearticle.writeMetadataHeader(self.newsSource)
 		while True:

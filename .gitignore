@@ -9,3 +9,4 @@ helpme
 data/etl_output/*
 data/nytimes/*
 logs/*
+data/etl_output/article_counts.csv

@@ -104,6 +104,7 @@ class MetadataWriterWorker(Thread):
 
 	def run(self):
 		logging.info("MetadataWriterWorker started for {}".format(newsSource))
+		print("MetadataWriterWorker.run started")
 		parsearticle.writeMetadataHeader(self.newsSource)
 		while True:
 			title, date, url, authors, newsSource, article_text_filename = self.metadataQueue.get()
@@ -133,6 +134,7 @@ class NewsCrawler():
 			logging.exception("Crawler doesn't recognize news source: {}".format(self.newsSource))
 
 	def start_metadata_worker(self):
+		print("Calling start_metadata_worker")
 		metadataWorker = MetadataWriterWorker(self.metadataQueue,self.newsSource)
 		metadataWorker.daemon = True
 		metadataWorker.start()

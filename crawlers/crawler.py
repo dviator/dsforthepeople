@@ -11,6 +11,9 @@ from crawlers import nytimes
 
 root_path = os.path.abspath(os.path.dirname(__file__))
 log_path = root_path+"/../logs"
+if not os.path.exists(log_path):
+		os.makedirs(log_path)
+		
 #Set program to log to a file
 #Configure the root logger for application. 
 crawl_logger = logging.basicConfig(filename=log_path+'/news_crawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s: %(message)s')

@@ -6,5 +6,6 @@ tests/__pycache__/
 data/locations/allCountries.txt
 *.pyc
 helpme
-data/etl_output/article_counts.csv.tmp
+data/etl_output/*
 data/nytimes/*
+logs/*

@@ -3,16 +3,16 @@ start_date_year = 2007
 start_date_month = 1
 start_date_day = 1
 end_date_year = 2016
-end_date_month = 4
-end_date_day = 15
+end_date_month = 6
+end_date_day = 26
 
 [crawler]
-threads = 16
+threads = 32
 newsSource = nytimes
 
 [parsearticle]
 #Local
 #data_root_dir = /home/alex/Desktop/dsforthepeople/data
-data_root_dir = /home/maevyn/Documents/dsforthepeople/data
+#data_root_dir = /home/maevyn/Documents/dsforthepeople/data
 #AWS
-#data_root_dir = /data
+data_root_dir = /data

@@ -9,6 +9,7 @@ import newspaper
 import random
 from queue import Queue
 import csv
+import timeout_decorator
 
 class TestParseArticle(unittest.TestCase):
 
@@ -43,8 +44,9 @@ class TestParseArticle(unittest.TestCase):
 		pass
 
 	def test_writes_fulltext_file(self):
+		metadataQueue = Queue()
 		#Run the parse on an article.
-		parsearticle.parse(self.url,self.newsSource,self.urldate)
+		parsearticle.parse(self.url,self.newsSource,self.urldate,metadataQueue)
 		#Fetch the file that the run should've written and store it's string contents in testing_fullText
 		testing_fullTextFileNames = os.listdir(self.fullText_dir)
 		testing_fullTextFileName = testing_fullTextFileNames.pop()
@@ -55,8 +57,11 @@ class TestParseArticle(unittest.TestCase):
 		self.assertEqual(self.sample_fullText,testing_fullText)
 
 	#Test that the parse function returns the data necessary for another thread to write it to the metadata csv
-	def test_returns_metadata_row(self):
-		title, date, url, authors, newsSource, filename = parsearticle.parse(self.url,self.newsSource,self.urldate)
+	def test_queues_metadata_row(self):
+		metadataQueue = Queue()
+
+		parsearticle.parse(self.url,self.newsSource,self.urldate, metadataQueue)
+		title, date, url, authors, newsSource, filename = metadataQueue.get()
 		self.assertEqual(self.sample_title,title)
 		self.assertEqual(self.sample_date,date)
 		self.assertEqual(self.url,url)
@@ -123,3 +128,19 @@ class TestParseArticle(unittest.TestCase):
 
 		self.assertIsNotNone(article)
 
+	#Test for exception disambiguation in parsearticle
+	# #Use timeout decorator as a workaround because failing test will cause 10 minutes of retrying.
+	# @timeout_decorator.timeout(5)
+	# def test_getArticle_backoff_does_not_retry_410_not_found_bad_html(self):
+	# 	good_url = self.url
+	# 	bad_url = "http://www.nytimes.com/aponline/2014/10/08/world/middleeast/ap-cn-canada-terrorism-threats.html"
+
+	# 	with self.assertRaises(newspaper.article.ArticleException):
+	# 		bad_article = parsearticle.getArticle(bad_url)
+
+
+
+	def test_duplicate_article_fullText_write_caught(self):
+		parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")
+		with self.assertRaises(FileExistsError):
+			parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")

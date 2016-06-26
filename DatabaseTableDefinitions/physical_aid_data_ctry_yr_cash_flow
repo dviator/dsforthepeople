@@ -1,0 +1,16 @@
+--The purpose of this table is to physicalize the view that was previously created for performance. This was titled "aid_data_ctry_yr_cash_flow".
+--Note: when editing this table, make sure that appropriate permissions are applied to the re-created table so user can access.
+
+DROP TABLE launch_pad.physical_aid_data_ctry_yr_cash_flow;
+
+CREATE TABLE launch_pad.physical_aid_data_ctry_yr_cash_flow (
+year integer NOT NULL,
+ctry_iso3 CHARACTER VARYING(3) NOT NULL,
+ctry_cash_flow DECIMAL(60,25) NOT NULL,
+ratio_ctry_cash_flow DECIMAL(6,3) NOT NULL);
+
+INSERT INTO launch_pad.physical_aid_data_ctry_yr_cash_flow
+SELECT * FROM launch_pad.aid_data_ctry_yr_cash_flow;
+
+SELECT *
+FROM launch_pad.physical_aid_data_ctry_yr_cash_flow;

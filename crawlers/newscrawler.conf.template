@@ -1,14 +1,15 @@
 [nytimes]
-start_date_year = 2007
-start_date_month = 1
-start_date_day = 1
+start_date_year = 2015
+start_date_month = 08
+start_date_day = 21
 end_date_year = 2016
-end_date_month = 4
-end_date_day = 15
+end_date_month = 6
+end_date_day = 18
 
 [crawler]
-threads = 16
-newsSource = nytimes
+threads = 32
+#Should be a comma separated list
+newsSources = nytimes,dummy
 
 [parsearticle]
 #Local

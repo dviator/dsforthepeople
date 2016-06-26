@@ -15,7 +15,9 @@ config = configparser.ConfigParser()
 config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
 data_root_dir = config.get('parsearticle','data_root_dir')
 
+#Configure another logger for the recording of runtime statistics for the parsing component
 stats_logger = logging.getLogger('stats_logger')
+
 
 def parse(url, newsSource, urlDate, metadataQueue):
 	logging.info("Calling parse with args: {}, {}, {}".format(url,newsSource,urlDate))

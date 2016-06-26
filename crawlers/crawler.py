@@ -15,21 +15,9 @@ log_path = root_path+"/../logs"
 #Configure the root logger for application. 
 crawl_logger = logging.basicConfig(filename=log_path+'/news_crawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s: %(message)s')
 
-#Configure loggersc
-# crawl_logger = logging.getLogger(__name__)
-# crawl_logger.setLevel(logging.DEBUG)
-# crawl_logger.propagate = False
-# crawl_handler = logging.FileHandler(filename=root_path+'/TestNewsCrawler.log')
-# crawl_handler.setLevel(logging.DEBUG)
-
-# formatter = logging.Formatter('%(asctime)s %(threadName)s %(levelname)s: %(message)s')
-
-# crawl_handler.setFormatter(formatter)
-# crawl_logger.addHandler(crawl_handler)
-
 #Configure a separate logger specifically for recording anomoly events in the parser code
 parse_ledger = logging.getLogger('parse_ledger')
-parse_ledger.setLevel(logging.INFO)
+parse_ledger.setLevel(logging.DEBUG)
 parse_ledger.propagate = False
 parse_handler = logging.FileHandler(filename=log_path+"/parse_ledger.log")
 parse_handler.setLevel(logging.DEBUG)
@@ -39,21 +27,6 @@ parse_handler.setFormatter(parse_formatter)
 
 parse_ledger.addHandler(parse_handler)
 
-#Get runtime configuration values
-config = configparser.ConfigParser()
-config.read(root_path+"/newscrawler.conf")
-numThreads = config.getint('crawler','threads') 
-newsSource = config.get('crawler','newsSource')
-
-#Child modules should call crawl_ledger = logging.getLogger('crawl_ledger')
-crawl_ledger = logging.getLogger('crawl_ledger')
-crawl_ledger.setLevel(logging.DEBUG)
-crawl_ledger.propagate = False
-crawl_handler = logging.FileHandler(filename=log_path+"/"+newsSource+"_ledger.log")
-crawl_handler.setLevel(logging.DEBUG)
-crawl_handler.setFormatter(parse_formatter)
-crawl_ledger.addHandler(crawl_handler)
-
 stats_logger = logging.getLogger('stats_logger')
 stats_logger.setLevel(logging.DEBUG)
 stats_logger.propagate = False
@@ -62,6 +35,25 @@ stats_handler.setLevel(logging.DEBUG)
 stats_formatter = logging.Formatter('%(asctime)s,%(threadName)s,%(message)s')
 stats_handler.setFormatter(stats_formatter)
 stats_logger.addHandler(stats_handler)
+
+#Get runtime configuration values
+config = configparser.ConfigParser()
+config.read(root_path+"/newscrawler.conf")
+numThreads = config.getint('crawler','threads') 
+#Collect comma separated list of newsSources
+newsSourceList = config.get('crawler','newsSources').split(',')
+
+#Configure separate logger for link crawlers error output.
+#Child modules should call crawl_ledger = logging.getLogger('crawl_ledger')
+crawl_ledger = logging.getLogger('crawl_ledger')
+crawl_ledger.setLevel(logging.DEBUG)
+crawl_ledger.propagate = False
+crawl_handler = logging.FileHandler(filename=log_path+"/crawl_ledger.log")
+crawl_handler.setLevel(logging.DEBUG)
+crawl_handler.setFormatter(parse_formatter)
+crawl_ledger.addHandler(crawl_handler)
+
+
 
 class DownloadWorker(Thread):
 	
@@ -80,13 +72,9 @@ class DownloadWorker(Thread):
 			if i % 100 == 0:
 				logging.info("{} articles parsed in {} seconds".format(i,time.time()-worker_start))
 			try:
-				
-				# title, date, url, authors, newsSource, article_text_filename = parsearticle.parse(url, source, urlDate)
+						
 				parsearticle.parse(url, source, urlDate, self.metadataQueue)
 				parse_ledger.debug("{} parsed successfully".format(url))
-				# print("I got from parse {},{},{},{},{},{}".format(title,date,url,authors,newsSource,article_text_filename))
-				# self.metadataQueue.put((title, date, url, authors, newsSource, article_text_filename))
-				# print(self.metadataQueue.qsize())
 
 			except newspaper.article.ArticleException as e:
 				# print("I see an exception")
@@ -117,33 +105,72 @@ class MetadataWriterWorker(Thread):
 			parsearticle.writeMetadataRow(title, date, url, authors, newsSource, article_text_filename)
 			self.metadataQueue.task_done()
 
+class NewsCrawler():
+
+	def __init__(self,newsSource, numThreads):
+		self.newsSource = newsSource
+		self.linksQueue = Queue()
+		self.metadataQueue = Queue()
+		self.numThreads = numThreads
+
+	def crawl(self):
+		for x in range(self.numThreads):
+			worker = DownloadWorker(self.linksQueue,self.metadataQueue)
+			worker.daemon = True
+			worker.start()
+
+		#This section maintains a list of available news sources	
+		if self.newsSource == 'nytimes':
+			nytimes.crawl_nytimes_archive(self.linksQueue)
+			self.start_metadata_worker()
+			self.wait_for_crawl_completion()
+		else:
+			logging.exception("Crawler doesn't recognize news source: {}".format(self.newsSource))
+
+	def start_metadata_worker(self):
+		metadataWorker = MetadataWriterWorker(self.metadataQueue,self.newsSource)
+		metadataWorker.daemon = True
+		metadataWorker.start()
+
+	def wait_for_crawl_completion(self):
+		self.linksQueue.join()
+		self.metadataQueue.join()
 
 def main():
+	logging.info("Crawl Run Beginning")
 	ts = time.time()
 	#Create queue to communicate with worker threads
-	queue = Queue()
-	metadataQueue = Queue()
+	# queue = Queue()
+	# metadataQueue = Queue()
 	#Create numThreads Worker Threads to download files and write out their fulltext
-	for x in range(numThreads):
-		worker = DownloadWorker(queue,metadataQueue)
-		worker.daemon = True
-		worker.start()
-
-	#Create a single metadataWorker to write metadata in a single thread as articles are donwloaded
-	metadataWorker = MetadataWriterWorker(metadataQueue,newsSource)
-	metadataWorker.daemon = True
-	metadataWorker.start()
-	#Will need a loop around this if there are to be multiple newsSource running concurrently.
+	# for x in range(numThreads):
+	# 	worker = DownloadWorker(queue,metadataQueue)
+	# 	worker.daemon = True
+	# 	worker.start()
 
 	#Call source specific crawler(s) to enqueue tasks
-	logging.info("Begin queueing links")
-	nytimes.crawl_nytimes_archive(queue)
 
-	#Start metadata
-	queue.join()
-	#Adding so program doesn't stop writing once link queue is done, but continues till all queued items are handled.
-	metadataQueue.join()
-	loggingger.info('Took {} seconds to parse complete source'.format(time.time() -ts))
+	# for newsSource in newsSourceList:
+	# 	if newsSource == 'nytimes':
+	# 		nytimes.crawl_nytimes_archive(queue)
+	# 	else:
+	# 		logging.exception("Crawler doesn't recognize news source: {}".format(newsSource))
+		
+	# 	#Create a metadataWorker thread for each active newsSource
+	# 	metadataWorker = MetadataWriterWorker(metadataQueue,newsSource)
+	# 	metadataWorker.daemon = True
+	# 	metadataWorker.start()
+
+	# queue.join()
+	# #Adding so program doesn't stop writing once link queue is done, but continues till all queued items are handled.
+	# metadataQueue.join()
+	for newsSource in newsSourceList:
+		print("Started crawler for {}".format(newsSource))
+		
+		crawler = NewsCrawler(newsSource,numThreads)
+		crawler.crawl()
+
+	logging.info('Took {} seconds to complete crawler run'.format(time.time() -ts))
 
 
 

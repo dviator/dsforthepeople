@@ -116,7 +116,8 @@ def writeMetadataHeader(newsSource):
 	metadata_dir = data_root_dir + "/" + newsSource + "/metadata/" 
 	metadata_file = metadata_dir + newsSource + "Articles.txt"
 	
-	#If data directory doesn't exist write it. 
+	#If data directory doesn't exist write it.
+	logging.info("Metadata path {} doesn't exist, creating it".format(metadata_dir)) 
 	if not os.path.exists(metadata_dir):
 		os.makedirs(metadata_dir)
 

@@ -108,6 +108,7 @@ class MetadataWriterWorker(Thread):
 		parsearticle.writeMetadataHeader(self.newsSource)
 		while True:
 			title, date, url, authors, newsSource, article_text_filename = self.metadataQueue.get()
+			logging.debug("MetadataWriterWorker got from queue url {}".format(url))
 			parsearticle.writeMetadataRow(title, date, url, authors, newsSource, article_text_filename)
 			self.metadataQueue.task_done()
 
@@ -127,8 +128,8 @@ class NewsCrawler():
 
 		#This section maintains a list of available news sources	
 		if self.newsSource == 'nytimes':
-			nytimes.crawl_nytimes_archive(self.linksQueue)
 			self.start_metadata_worker()
+			nytimes.crawl_nytimes_archive(self.linksQueue)
 			self.wait_for_crawl_completion()
 		else:
 			logging.exception("Crawler doesn't recognize news source: {}".format(self.newsSource))

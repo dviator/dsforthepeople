@@ -105,7 +105,7 @@ class MetadataWriterWorker(Thread):
 	def run(self):
 		logging.info("MetadataWriterWorker started for {}".format(self.newsSource))
 		
-		parsearticle.writeMetadataHeader(self.newsSource)
+		parsearticle.writeMetadataHeader(self.newsSource)  
 		
 		while True:
 			title, date, url, authors, newsSource, article_text_filename = self.metadataQueue.get()

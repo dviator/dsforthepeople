@@ -12,7 +12,7 @@ class TestCrawler(unittest.TestCase):
 		logging.disable(logging.CRITICAL)
 
 	@patch('crawlers.crawler.nytimes.crawl_nytimes_archive')
-	def test_main_calls_link_generator_nytimes(self,mock_crawl_nytimes_archive):
+	def test_main_calls_correct_link_generators(self,mock_crawl_nytimes_archive):
 		crawler.main()
 		assert mock_crawl_nytimes_archive.called
 
@@ -54,6 +54,8 @@ class TestCrawler(unittest.TestCase):
 		metadataWorker.daemon = True
 		metadataWorker.start()
 
+		metadataQueue.join()
+		print("Metadata headers calls count = {}".format(crawler.parsearticle.writeMetadataHeader.call_count))
 		assert crawler.parsearticle.writeMetadataHeader.call_count == 1
 		assert crawler.parsearticle.writeMetadataRow.call_count == 3
 		#Fetches metadata fields from a queue

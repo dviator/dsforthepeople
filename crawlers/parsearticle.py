@@ -10,9 +10,16 @@ import sys
 from retrying import retry
 import hashlib
 import requests
+import shutil
+
+root_path = os.path.abspath(os.path.dirname(__file__))
+
+#Create conf file from template if not done already
+if not os.path.exists(os.path.join(root_path,"newscrawler.conf")):
+	shutil.copyfile(os.path.join(root_path,"newscrawler.conf.template"),os.path.join(root_path,"newscrawler.conf"))
 
 config = configparser.ConfigParser()
-config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
+config.read(os.path.join(root_path,"newscrawler.conf"))
 data_root_dir = config.get('parsearticle','data_root_dir')
 
 #Configure another logger for the recording of runtime statistics for the parsing component

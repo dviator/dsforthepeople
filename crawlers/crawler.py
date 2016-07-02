@@ -39,9 +39,6 @@ stats_formatter = logging.Formatter('%(asctime)s,%(threadName)s,%(message)s')
 stats_handler.setFormatter(stats_formatter)
 stats_logger.addHandler(stats_handler)
 
-#Create conf file from template if not done already
-if not os.path.exists(os.path.join(root_path,"newscrawler.conf")):
-	os.symlink(os.path.join(root_path,"newscrawler.conf"),os.path.join(root_path,"newscrawler.conf.template"))
 #Get runtime configuration values
 config = configparser.ConfigParser()
 config.read(root_path+"/newscrawler.conf")

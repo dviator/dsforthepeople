@@ -16,4 +16,4 @@ newsSources = nytimes,dummy
 #data_root_dir = /home/alex/Desktop/dsforthepeople/data
 data_root_dir = /home/maevyn/Documents/dsforthepeople/data
 #AWS
-#data_root_dir = /data
+data_root_dir = /data

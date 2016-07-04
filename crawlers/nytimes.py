@@ -94,7 +94,7 @@ def retry_if_request_error(exception):
 		return False
 
 #Use retry decorator to retry the function in the event of a network failure.
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
+@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=60000)
 def getSearchJSON(browser,search_url):
 	search_page = browser.get(search_url, timeout=5)
 	logging.debug("Got a search page going to return")

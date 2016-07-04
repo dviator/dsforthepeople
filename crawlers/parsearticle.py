@@ -91,7 +91,7 @@ def retry_if_request_error(exception):
 	else:
 		return False
 
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
+@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=60000)
 def getArticle(url):
 	logging.info("Attempting getArticle on url {}".format(url))
 	article = newspaper.Article(url)

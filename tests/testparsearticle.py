@@ -138,9 +138,13 @@ class TestParseArticle(unittest.TestCase):
 	# 	with self.assertRaises(newspaper.article.ArticleException):
 	# 		bad_article = parsearticle.getArticle(bad_url)
 
-
-
 	def test_duplicate_article_fullText_write_caught(self):
 		parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")
 		with self.assertRaises(FileExistsError):
 			parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")
+
+	def test_parse_handles_bad_url(self):
+		queue = Queue()
+		with self.assertRaises(newspaper.article.ArticleException):
+			parsearticle.parse("/data/daily/2006/11/30/778907.sgm","test",self.urldate,queue)
+		# parsearticle.getArticle("/data/daily/2006/11/30/778907.sgm")

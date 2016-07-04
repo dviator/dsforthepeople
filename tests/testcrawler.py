@@ -16,10 +16,12 @@ class TestCrawler(unittest.TestCase):
 		crawler.main()
 		assert mock_crawl_nytimes_archive.called
 
-	def test_DownloadWorker_bypasses_ArticleException_and_FileExistsError(self):
+	@patch('crawlers.crawler.parsearticle.parse')
+	def test_DownloadWorker_bypasses_ArticleException_and_FileExistsError(self,mock_parse):
 		#Call the function with exceptions and with good ouput to ensure it continues execution
-		crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,FileExistsError,self.dummyMetadata])
-		crawler.parsearticle.parse.start()
+		# crawler.parsearticle.parse = MagicMock(side_effect=[crawler.newspaper.article.ArticleException,FileExistsError,self.dummyMetadata])
+		# crawler.parsearticle.parse.start()
+		mock_parse.side_effect = [crawler.newspaper.article.ArticleException,FileExistsError,self.dummyMetadata]
 		queue = crawler.Queue()
 		metadataQueue = crawler.Queue()
 		worker = crawler.DownloadWorker(queue,metadataQueue)
@@ -35,7 +37,7 @@ class TestCrawler(unittest.TestCase):
 		queue.join()
 
 		#Unmock the method to return it to normal for other tests		
-		crawler.parsearticle.parse.stop()
+		# crawler.parsearticle.parse.stop()
 		#Make sure a call was made to parse for each entry in the queue
 		assert crawler.parsearticle.parse.call_count == 3
 		#Make sure each entry in the queue was processed and the call to queue.task_done was made
@@ -61,6 +63,30 @@ class TestCrawler(unittest.TestCase):
 		#Fetches metadata fields from a queue
 		#Writes them to a file
 
+	@patch('crawlers.crawler.parsearticle.getArticle')
+	def test_crawler_passes_bad_getArticle(self,mock_getArticle):
+		mock_getArticle.side_effect = [crawler.newspaper.article.ArticleException]
+		queue = crawler.Queue()
+		metadataQueue = crawler.Queue()
+		worker = crawler.DownloadWorker(queue,metadataQueue)
+
+		#Call the worker as a daemon so that it exits when the test case that called it exits.
+		worker.daemon = True
+		worker.start()
+
+		
+		queue.put(self.dummyLinkData)
+		# queue.put(self.dummyLinkData)
+		# queue.put(("/data/daily/2006/11/30/778907.sgml","test","20070101"))
+		# queue.put(self.dummyLinkData)
+		#Wait until the queue is empty to stop execution
+		queue.join()
+
+
+		# Make sure a call was made to parse for each entry in the queue
+		assert mock_getArticle.call_count == 1
+		# Make sure each entry in the queue was processed and the call to queue.task_done was made
+		assert queue.qsize() == 0
 	#Need to test that the main program properly instantiates the metadataWriterWorker
 	#This includes proper queues and later on, 1 thread per newsSource
 	#Commenting out as moved queuing function into parsearticle.

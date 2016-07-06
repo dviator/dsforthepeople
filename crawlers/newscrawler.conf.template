@@ -1,18 +1,19 @@
 [nytimes]
-start_date_year = 2007
-start_date_month = 1
-start_date_day = 1
+start_date_year = 2006
+start_date_month = 01
+start_date_day = 01
 end_date_year = 2016
-end_date_month = 4
-end_date_day = 15
+end_date_month = 07
+end_date_day = 03
 
 [crawler]
-threads = 16
-newsSource = nytimes
+threads = 32
+#Should be a comma separated list
+newsSources = nytimes,dummy
 
 [parsearticle]
 #Local
 #data_root_dir = /home/alex/Desktop/dsforthepeople/data
-data_root_dir = /home/maevyn/Documents/dsforthepeople/data
+#data_root_dir = /home/maevyn/Documents/dsforthepeople/data
 #AWS
-#data_root_dir = /data
+data_root_dir = /data

@@ -10,9 +10,16 @@ import sys
 from retrying import retry
 import hashlib
 import requests
+import shutil
+
+root_path = os.path.abspath(os.path.dirname(__file__))
+
+#Create conf file from template if not done already
+if not os.path.exists(os.path.join(root_path,"newscrawler.conf")):
+	shutil.copyfile(os.path.join(root_path,"newscrawler.conf.template"),os.path.join(root_path,"newscrawler.conf"))
 
 config = configparser.ConfigParser()
-config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"newscrawler.conf"))
+config.read(os.path.join(root_path,"newscrawler.conf"))
 data_root_dir = config.get('parsearticle','data_root_dir')
 
 #Configure another logger for the recording of runtime statistics for the parsing component
@@ -84,7 +91,7 @@ def retry_if_request_error(exception):
 	else:
 		return False
 
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=600000)
+@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=300000) #60000
 def getArticle(url):
 	logging.info("Attempting getArticle on url {}".format(url))
 	article = newspaper.Article(url)
@@ -116,7 +123,8 @@ def writeMetadataHeader(newsSource):
 	metadata_dir = data_root_dir + "/" + newsSource + "/metadata/" 
 	metadata_file = metadata_dir + newsSource + "Articles.txt"
 	
-	#If data directory doesn't exist write it. 
+	#If data directory doesn't exist write it.
+	logging.info("Metadata path {} doesn't exist, creating it".format(metadata_dir)) 
 	if not os.path.exists(metadata_dir):
 		os.makedirs(metadata_dir)
 

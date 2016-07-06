@@ -9,7 +9,8 @@ import os
 from queue import Queue
 import datetime
 import logging
-import responses
+#Not used yet
+#import responses
 
 class TestNYTimes(unittest.TestCase):
 

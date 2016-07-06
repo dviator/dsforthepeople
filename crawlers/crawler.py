@@ -11,6 +11,9 @@ from crawlers import nytimes
 
 root_path = os.path.abspath(os.path.dirname(__file__))
 log_path = root_path+"/../logs"
+if not os.path.exists(log_path):
+		os.makedirs(log_path)
+
 #Set program to log to a file
 #Configure the root logger for application. 
 crawl_logger = logging.basicConfig(filename=log_path+'/news_crawler.log',level=logging.INFO,format='%(asctime)s %(threadName)s %(levelname)s: %(message)s')
@@ -63,6 +66,7 @@ class DownloadWorker(Thread):
 		self.metadataQueue = metadataQueue
 
 	def run(self):
+		logging.info("DownloadWorker started ")
 		i = 0
 		worker_start = time.time()
 		while True:
@@ -99,9 +103,13 @@ class MetadataWriterWorker(Thread):
 		self.newsSource = newsSource
 
 	def run(self):
-		parsearticle.writeMetadataHeader(self.newsSource)
+		logging.info("MetadataWriterWorker started for {}".format(self.newsSource))
+		
+		parsearticle.writeMetadataHeader(self.newsSource)  
+		
 		while True:
 			title, date, url, authors, newsSource, article_text_filename = self.metadataQueue.get()
+			logging.debug("MetadataWriterWorker got from queue url {}".format(url))
 			parsearticle.writeMetadataRow(title, date, url, authors, newsSource, article_text_filename)
 			self.metadataQueue.task_done()
 
@@ -121,8 +129,8 @@ class NewsCrawler():
 
 		#This section maintains a list of available news sources	
 		if self.newsSource == 'nytimes':
-			nytimes.crawl_nytimes_archive(self.linksQueue)
 			self.start_metadata_worker()
+			nytimes.crawl_nytimes_archive(self.linksQueue)
 			self.wait_for_crawl_completion()
 		else:
 			logging.exception("Crawler doesn't recognize news source: {}".format(self.newsSource))

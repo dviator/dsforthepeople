@@ -10,6 +10,7 @@ import random
 from queue import Queue
 import csv
 import timeout_decorator
+import requests
 
 class TestParseArticle(unittest.TestCase):
 
@@ -121,12 +122,13 @@ class TestParseArticle(unittest.TestCase):
 		self.assertEqual(self.newsSource,tested_newsSource)
 		self.assertEqual(filename,tested_filename)
 
-	@patch('newspaper.Article.parse')
-	def test_getArticle_backoff(self,mock_parse):
-		mock_parse.side_effect = [newspaper.article.ArticleException("Article Exception"),mock_parse.DEFAULT]
-		article = parsearticle.getArticle(self.url)
-
-		self.assertIsNotNone(article)
+	#Made Irrevlant by switch to requests.get from article.download()
+	# @patch('requests.get')
+	# def test_getArticle_timeout_handled(self,mock_get):
+	# 	mock_get.side_effect = [requests.exceptions.Timeout("Timeout Exception"),mock_get.DEFAULT]
+	# 	article = parsearticle.getArticle(self.url)
+	# 	article = parsearticle.getArticle(self.url)
+	# 	self.assertIsNotNone(article)
 
 	#Test for exception disambiguation in parsearticle
 	# #Use timeout decorator as a workaround because failing test will cause 10 minutes of retrying.
@@ -143,8 +145,13 @@ class TestParseArticle(unittest.TestCase):
 		with self.assertRaises(FileExistsError):
 			parsearticle.writeFullTextFile(self.newsSource,self.sample_title,self.sample_date,"test_text")
 
-	def test_parse_handles_bad_url(self):
-		queue = Queue()
-		with self.assertRaises(newspaper.article.ArticleException):
-			parsearticle.parse("/data/daily/2006/11/30/778907.sgm","test",self.urldate,queue)
+	# Test doesn't really work
+	# def test_parse_handles_bad_url(self):
+	# 	queue = Queue()
+	# 	with self.assertRaises(newspaper.article.ArticleException):
+	# 		parsearticle.parse("/data/daily/2006/11/30/778907.sgm","test",self.urldate,queue)
 		# parsearticle.getArticle("/data/daily/2006/11/30/778907.sgm")
+
+	def test_page_not_found_handled(self):
+		with self.assertRaises(requests.exceptions.HTTPError):
+			parsearticle.getArticle("http://www.nytimes.com/aponline/2014/10/08/world/middleeast/ap-cn-canada-terrorism-threats.html?_r=0")

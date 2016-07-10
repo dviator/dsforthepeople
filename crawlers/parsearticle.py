@@ -83,40 +83,34 @@ def writeFullTextFile(newsSource,title,date,text):
 
 	return article_text_filename, write_text_duration, article_size
 
-def retry_if_request_error(exception):
-	if isinstance(exception,newspaper.article.ArticleException):
-		logging.warning("Retrying article")
-		#Going to implement logic to check for a 410 response from requests indicating this is bad html. Otherwise assume network issue.
-		return True
-	else:
-		return False
+# def retry_if_request_error(exception):
+# 	if isinstance(exception,newspaper.article.ArticleException):
+# 		logging.warning("Retrying article")
+# 		#Going to implement logic to check for a 410 response from requests indicating this is bad html. Otherwise assume network issue.
+# 		return True
+# 	else:
+# 		return False
 
-@retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=300000) #60000
+# @retry(retry_on_exception=retry_if_request_error,wait_exponential_multiplier=250,wait_exponential_max=30000,stop_max_delay=300000) #60000
 def getArticle(url):
 	logging.info("Attempting getArticle on url {}".format(url))
 	article = newspaper.Article(url)
 	download_start = time.time()
-	article.download()
-	#Check for html now that article is downloaded. If not, raise an error?
-	parse_start = time.time()
-	#Following commented code is not working skeleton code for disambiguating ArticleExceptions that should be retried and those that shouldn't.
-	#Want to only invoke extra get if parse fails initially, and then decide on retry behavior by either raising a standard ArticleException which causes a retry
-	#or raising a unique exception that will be raised upwards causing the article to be skipped over and logged.
-	# try:
+	response = requests.get(url, timeout=300)
+	download_duration = time.time() - download_start
+	
+	if response.status_code == 200:
+		article.set_html(response.content)
+	else:
+		response.raise_for_status()
+
+	parse_start = time.time()	
 	article.parse()
-	# except(newspaper.article.ArticleException):
-	# 	url_status = requests.get(url).status_code
-	# 	if url_status == 401:
-	# 		print("url status 401")
-	# 		raise HTMLNotFoundError("page at url {} could not be found".format(url))
-	# 	else:
-	# 		raise newspaper.article.ArticleException("URL status besides 401 on bad article.parse")
 
 	logging.info("Downloading article at {} completed in {} seconds".format(url, time.time()- download_start))	
-	# print(article)
-	# print(dir(article))
+
 	logging.debug("Parse completed in {} seconds".format(time.time()- parse_start))
-	download_duration = time.time() - download_start
+	
 	return article, download_duration
 
 def writeMetadataHeader(newsSource):
@@ -152,7 +146,3 @@ def writeMetadataRow(title, date, url, authors, newsSource, article_text_filenam
 	return
 
 	#Write plaintext of article into file named with surrogate key reference to metadata entry in metadata file
-
-class HTMLNotFoundError(Exception):
-	def __init__(self,arg):
-		self.args = arg

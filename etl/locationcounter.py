@@ -42,6 +42,7 @@ def getCountries():
 
 	countries = {}
 	locations_fn = root_path + "/locations/country_codes.csv"
+
 	with open(locations_fn) as locationsfile:
 		reader = csv.reader(locationsfile)
 		for row in reader:
@@ -52,7 +53,6 @@ def getCountries():
 #Functions for output file formatting
 def writeMetadataHeader(filename):
 	''' Write Header to the ETL Output File '''
-	
 	with open(filename, 'a') as csvfile:
 		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
 		articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID","Country","Count"])

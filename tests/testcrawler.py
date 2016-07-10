@@ -4,6 +4,8 @@ import retrying
 import logging
 from crawlers import crawler
 import time
+import requests
+
 class TestCrawler(unittest.TestCase):
 
 	dummyMetadata = ("DummyData1","DummyData2","DummyData3","DummyData4","DummyData5","DummyData6")
@@ -42,6 +44,28 @@ class TestCrawler(unittest.TestCase):
 		assert crawler.parsearticle.parse.call_count == 3
 		#Make sure each entry in the queue was processed and the call to queue.task_done was made
 		assert queue.qsize() == 0
+
+	@patch('crawlers.crawler.parsearticle.parse')
+	def test_DownloadWorker_bypasses_HTTPError_exception(self,mock_parse):
+		mock_parse.side_effect = [requests.exceptions.HTTPError,self.dummyMetadata]
+		queue = crawler.Queue()
+		metadataQueue = crawler.Queue()
+		worker = crawler.DownloadWorker(queue,metadataQueue)
+
+		#Call the worker as a daemon so that it exits when the test case that called it exits.
+		worker.daemon = True
+		worker.start()
+
+		#Put 4 entries on the queue
+		for _ in range(2):
+			queue.put(self.dummyLinkData)
+		#Wait until the queue is empty to stop execution
+		queue.join()
+
+		assert crawler.parsearticle.parse.call_count == 2
+
+		assert queue.qsize() == 0 
+
 
 	#Test that the metadatawriter worker properly calls it's parsearticle write methods
 	def test_metadataWriterWorker_calls_header_and_row_writes(self):
@@ -87,6 +111,8 @@ class TestCrawler(unittest.TestCase):
 		assert mock_getArticle.call_count == 1
 		# Make sure each entry in the queue was processed and the call to queue.task_done was made
 		assert queue.qsize() == 0
+
+
 	#Need to test that the main program properly instantiates the metadataWriterWorker
 	#This includes proper queues and later on, 1 thread per newsSource
 	#Commenting out as moved queuing function into parsearticle.

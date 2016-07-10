@@ -5,6 +5,7 @@ import logging
 import configparser
 import newspaper
 import os
+import requests
 
 from crawlers import parsearticle 
 from crawlers import nytimes
@@ -90,6 +91,12 @@ class DownloadWorker(Thread):
 				logging.warning("Skipped fullTextWrite and metadata queueing for duplicate filename on {} article at url {}".format(source,url))
 				parse_ledger.warning("{} skipped, duplicate in fullText directory".format(url))
 				pass
+
+			except requests.exceptions.HTTPError:
+				parse_ledger.warning("Skipped article due to invalid HTTP response at url {}".format(url))
+
+			except requests.exceptions.Timeout:
+				parse_ledge.warning("Skipped article due to request Timeout at url {}".format(url))
 
 			self.queue.task_done()
 			i+=1

@@ -14,3 +14,6 @@ SELECT * FROM launch_pad.aid_data_ctry_yr_cash_flow;
 
 SELECT *
 FROM launch_pad.physical_aid_data_ctry_yr_cash_flow;
+
+--add privilidges for the web user.
+GRANT SELECT ON launch_pad.physical_aid_data_ctry_yr_cash_flow TO webuser;\

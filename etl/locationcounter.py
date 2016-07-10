@@ -43,7 +43,7 @@ def getCountries():
 	''' Fetch list of locations with corresponding ISO country code '''
 
 	countries = {}
-	locations_fn = data_root_dir + "/locations/country_codes.csv"
+	locations_fn = os.path.abspath(os.path.dirname(__file__))+"/../data/locations/country_codes.csv"
 	with open(locations_fn) as locationsfile:
 		reader = csv.reader(locationsfile)
 		for row in reader:
@@ -54,7 +54,6 @@ def getCountries():
 #Functions for output file formatting
 def writeMetadataHeader(filename):
 	''' Write Header to the ETL Output File '''
-	
 	with open(filename, 'a') as csvfile:
 		articleWriter = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
 		articleWriter.writerow(["Title","Date","URL","Authors","Source","fullTextID","Country","Count"])
@@ -172,6 +171,10 @@ if __name__ == '__main__':
 	start=time.time()
 	paths=[]
 	COUNTRIES = getCountries()
+	
+	#Create locations directory if it doesn't exist
+	if not os.path.exists(data_root_dir+"/etl_output/"):
+		os.makedirs(data_root_dir+"/etl_output/")
 
 	# Delete the output file if it currently exists
 	if os.path.isfile(OUTFILE):

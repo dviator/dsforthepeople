@@ -6,6 +6,7 @@
 import logging
 import configparser
 import os
+import ntpath
 
 # for efficient searching
 import re
@@ -20,20 +21,17 @@ import sys
 import time
 
 # Global Variables
-global COUNTRIES
-global OUTFILE
 
 #########################################################################################################################
 # CONFIGURATIONS
 #########################################################################################################################
 
 # Setup for Logging, Global Variable Definitions, 
-logging.basicConfig(filename='LocationCounter.log',level=logging.INFO,format='%(asctime)s %(levelname)s: %(message)s')
+logging.basicConfig(filename='etl/LocationCounter.log',level=logging.INFO,format='%(asctime)s %(levelname)s: %(message)s')
 config = configparser.ConfigParser()
 config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)),"../","crawlers/","newscrawler.conf"))
 data_root_dir = config.get('parsearticle','data_root_dir')
-OUTFILE = data_root_dir + "/etl_output/article_counts.csv"
-METADATAFILE = data_root_dir + "/nytimes/metadata/nytimesArticles.txt"
+root_path = os.path.abspath(os.path.dirname(__file__))
 
 #########################################################################################################################
 # Function Definitions
@@ -43,7 +41,7 @@ def getCountries():
 	''' Fetch list of locations with corresponding ISO country code '''
 
 	countries = {}
-	locations_fn = data_root_dir + "/locations/country_codes.csv"
+	locations_fn = root_path + "/locations/country_codes.csv"
 	with open(locations_fn) as locationsfile:
 		reader = csv.reader(locationsfile)
 		for row in reader:
@@ -106,7 +104,7 @@ def readMetadata():
 
 def writeMetadataFile():
 	''' concatenate counts of country names in each article with its corresponding metadata for final output '''
-	tempfilename = OUTFILE + ".tmp"
+	tempfilename = OUTFILE + ".join"
 	metadict = readMetadata() 
 	with open(tempfilename, 'a') as tempfile:
 		metawriter = csv.writer(tempfile, delimiter="~", quoting=csv.QUOTE_ALL)
@@ -135,6 +133,10 @@ def writeMetadataFile():
 def process_file(article_path):
 	''' Process one file: count occurrences of country names in this file '''
 
+	logging.info("processing file: " + ntpath.basename(article_path))
+
+	COUNTRIES = getCountries()
+
 	articleid = os.path.basename(os.path.normpath(article_path))
 	with open(article_path) as inp:
 		lines = inp.readlines()
@@ -142,10 +144,12 @@ def process_file(article_path):
 	for place in COUNTRIES:
 		flag = False
 		count = 0
+		inc = 0
 		for line in lines:
-			if re.search(place, line, re.IGNORECASE):
+			inc = len(re.findall(place, line, re.IGNORECASE));
+			if inc > 0:
 				flag = True
-				count += 1
+				count += inc
 		# If this country's name was found at all, print it's count to the output file
 		if flag:
 			writeMetadataRow(articleid, COUNTRIES[place], str(count))
@@ -155,6 +159,11 @@ def process_file(article_path):
 # Function to process all files in parallel
 def process_files_parallel(paths):
 	''' process each file in via map() '''
+	count = 0
+	for path in paths:
+		count = count + 1
+
+	print ("Number of paths: ", count)
 
 	pool=Pool()
 	results=pool.map(process_file, paths)
@@ -165,21 +174,26 @@ def process_files_parallel(paths):
 # Main
 #########################################################################################################################
 
-if __name__ == '__main__':
+def main(_outfile_="/etl_output/article_counts.csv", _metadatafile_="/nytimes/metadata/nytimesArticles.txt", _data_dir_="/nytimes/fullText"):
 
 	# Define some needed variables
-	data_dir = data_root_dir + "/nytimes/fullText/"
+	data_dir = data_root_dir + _data_dir_
 	start=time.time()
 	paths=[]
-	COUNTRIES = getCountries()
+
+	global OUTFILE
+	OUTFILE = data_root_dir + _outfile_
+	global METADATAFILE 
+	METADATAFILE = data_root_dir + _metadatafile_
 
 	# Delete the output file if it currently exists
 	if os.path.isfile(OUTFILE):
 		os.remove(OUTFILE)
+		os.remove(OUTFILE + ".join")
 
 	# Create the Metadata output file
 	writeMetadataHeader(OUTFILE)
-	writeMetadataHeader(OUTFILE + ".tmp")
+	writeMetadataHeader(OUTFILE + ".join")
 
 	# Get a list of paths to all articles 
 	for root, dirs, files in os.walk(data_dir, topdown=False):
@@ -200,6 +214,10 @@ if __name__ == '__main__':
 	# 3.  Refine search not just to countries, but to localities within those countries as well
 
 	print ("process_files_parallel() ",time.time()-start,sep=" ")
+
+if __name__ == '__main__':
+	main()
+
 
 
 

@@ -98,6 +98,8 @@ class DownloadWorker(Thread):
 			except requests.exceptions.Timeout:
 				parse_ledge.warning("Skipped article due to request Timeout at url {}".format(url))
 
+			except requests.exceptions.ConnectionError:
+				parse_ledge.warning("Skipped article due to probabl server side Timeout/Connection reset at url {}".format(url))
 			self.queue.task_done()
 			i+=1
 			

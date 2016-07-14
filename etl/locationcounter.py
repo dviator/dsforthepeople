@@ -189,6 +189,8 @@ def main(_outfile_="/etl_output/article_counts.csv", _metadatafile_="/nytimes/me
 	# Delete the output file if it currently exists
 	if os.path.isfile(OUTFILE):
 		os.remove(OUTFILE)
+	#Added since it was breaking run -Dan
+	if os.path.isfile(OUTFILE + ".join"):
 		os.remove(OUTFILE + ".join")
 
 	# Create the Metadata output file

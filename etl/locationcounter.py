@@ -212,8 +212,7 @@ def main(_outfile_="/etl_output/article_counts.csv", _metadatafile_="/nytimes/me
 
 	# TO-DO
 	# 1.  Determine which dataset to work with.
-	# 2.  Input original metadata to currently empty CSV output columns
-	# 3.  Refine search not just to countries, but to localities within those countries as well
+	# 2.  Refine search not just to countries, but to localities within those countries as well
 
 	print ("process_files_parallel() ",time.time()-start,sep=" ")
 

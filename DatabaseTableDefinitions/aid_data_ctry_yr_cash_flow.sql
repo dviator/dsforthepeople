@@ -65,4 +65,5 @@ FROM
 	WHERE LENGTH(CTRY_ISO3) = 3
 	AND CTRY_ISO3 NOT LIKE ('% %')
 	AND year <> 9999
+	AND year <> 2013
 	GROUP BY flg_sum.year, flg_sum.CTRY_ISO3) ctry_year;

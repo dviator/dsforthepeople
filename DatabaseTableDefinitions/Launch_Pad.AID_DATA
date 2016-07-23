@@ -1,267 +1,161 @@
 --Michael Greis - Altered from the initial upload of the table to have more defined data types that accurately represent the data set. Additionally, DML added at the bottom of the page to clean the data from the raw file upload.
+--Converted table to take aid_data 3.0 data
 
---DROP TABLE launch_pad.AID_DATA;
-CREATE TABLE launch_pad.AID_DATA
+
+--DROP TABLE launch_pad.aid_data;
+CREATE TABLE launch_pad.aid_data
 (
-  aiddata_id bigint NOT NULL,
-  year integer NULL,
-  commitment_date DATE NULL,
-  start_date DATE  NULL,
-  end_date DATE NULL,
-  donor character varying(100) NULL,
-  donor_iso2 character varying(3) NULL,
-  donor_iso3 character varying(3) NULL,
-  umbrella character varying(20) NULL,
-  donor_project_id character varying(100) NULL,
-  crsid character varying(40) NULL,
-  financing_agency character varying(150) NULL,
-  donor_type character varying(20) NULL,
-  bi_multi text NULL,
-  recipient character varying(50) NULL,
-  recipient_iso2 character varying(2) NULL,
-  recipient_iso3 character varying(3) NULL,
-  private_recipient character varying(10) NULL,
-  implementing_agency text NULL,
-  channel_code character varying(10) NULL,
-  borrower character varying(100) NULL,
-  beneficiary character varying(400) NULL,
-  guarantor character varying(100) NULL,
-  other_involved_institutions character varying(255) NULL,
-  commitment_amount DECIMAL(60,25) NULL,
-  commitment_amount_currency character varying(10) NULL,
-  commitment_amount_usd_nominal DECIMAL(60,25) NULL,
-  commitment_amount_usd_constant DECIMAL(60,25) NULL,
-  disbursement_amount DECIMAL(60,25) NULL,
-  disbursement_amount_currency character varying(10) NULL,
-  disbursement_amount_usd_nominal DECIMAL(60,25) NULL,
-  disbursement_amount_usd_constant DECIMAL(60,25) NULL,
-  total_project_cost DECIMAL(60,25) NULL,
-  total_project_cost_currency character varying(10) NULL,
-  total_project_cost_usd_nominal DECIMAL(60,25) NULL,
-  total_project_cost_usd_constant DECIMAL(60,25) NULL,
-  title text NULL,
-  short_description text NULL,
-  short_description_original_language text NULL,
-  long_description text NULL,
-  long_description_original_language text NULL,
-  additional_info text NULL,
-  additional_info_original_language text NULL,
-  flow_type character varying(30) NULL,
-  crs_flow_name character varying(40) NULL,
-  number_repayments_per_year integer NULL,
-  repay_type character varying(2) NULL,
-  loan_term character varying(10) NULL,
-  grace_period character varying(25) NULL,
-  interest_rate character varying(30) NULL,
-  second_interest_rate character varying(10) NULL,
-  grant_element character varying(20) NULL,
-  cancelled character varying(2) NULL,
-  repay_date_first character varying(50)  NULL,
-  repay_date_last DATE NULL,
-  untied_amount_usd_nominal DECIMAL(35,25) NULL,
-  partial_tied_amount_usd_nominal DECIMAL(35,25) NULL,
-  tied_amount_usd_nominal DECIMAL(60,25) NULL,
-  received_amount_usd_nominal DECIMAL(60,25) NULL,
-  irtc_amount_usd_nominal DECIMAL(60,25) NULL,
-  expert_commitment_amount_usd_nominal DECIMAL(60,25) NULL,
-  expert_extended_amount_usd_nominal DECIMAL(60,25) NULL,
-  export_credit_amount_usd_nominal DECIMAL(60,25) NULL,
-  outstanding_amount_usd_nominal DECIMAL(60,25) NULL,
-  arrears_principal_amount_usd_nominal DECIMAL(60,25) NULL,
-  arrears_interest_amount_usd_nominal DECIMAL(60,25) NULL,
-  future_ds_principal_amount_usd_nominal DECIMAL(60,25) NULL,
-  future_ds_interest_amount_usd_nominal DECIMAL(60,25) NULL,
-  region character varying(23) NULL,
-  location character varying(162) NULL,
-  source character varying(18) NULL,
-  language character varying(7) NULL,
-  biodiversity character varying(2) NULL,
-  climate character varying(2) NULL,
-  desertification character varying(2) NULL,
-  crs_purpose_code character varying(5) NULL,
-  crs_purpose_name character varying(75) NULL,
-  gender character varying(2) NULL,
-  trade character varying(2) NULL,
-  pdgg character varying(2) NULL,
-  ftc character varying(2) NULL,
-  sector_programme character varying(2) NULL,
-  sector character varying(50) NULL,
-  sector_code character varying(3) NULL,
-  associated_financing character varying(2) NULL,
-  initial_report character varying(2) NULL,
-  finance_t character varying(3) NULL,
-  environmental_impact_assessment character varying(2) NULL,
-  environment character varying(2) NULL,
-  investment_project character varying(2) NULL,
-  aiddata_purpose_code character varying(5) NULL,
-  aiddata_purpose_name character varying(184) NULL,
-  aiddata_activity_code character varying(296) NULL,
-  aiddata_activity_name text NULL,
-  aiddata_feasibility_study character varying(2) NULL,
-  aiddata_technical_assistance character varying(2) NULL,
-  coalesced_purpose_code character varying(5) NULL,
-  coalesced_purpose_name character varying(184) NULL
+	aiddata_id BIGINT NULL,
+	aiddata_2_id BIGINT NULL,
+	year BIGINT NULL,
+	donor TEXT NULL,
+	donor_iso2 CHARACTER VARYING(2) NULL,
+	donor_region TEXT NULL,
+	implementing_agency text NULL,
+	financing_agency TEXT NULL,
+	crs_bi_multi TEXT NULL,
+	recipient TEXT NULL,
+	recipient_iso2 CHARACTER VARYING(2) NULL,
+	recipient_region TEXT NULL,
+	start_date DATE NULL,
+	end_date DATE NULL,
+	commitment_date DATE NULL,
+	planned_start_date DATE NULL,
+	planned_end_date DATE NULL,
+	title text NULL,
+	short_description text NULL,
+	long_description text NULL,
+	donor_project_id TEXT NULL,
+	donor_secondary_id TEXT NULL,
+	aiddata_sector_code TEXT NULL,
+	aiddata_sector_name TEXT NULL,
+	aiddata_purpose_code TEXT NULL,
+	aiddata_purpose_name TEXT NULL,
+	aiddata_activity_codes TEXT NULL,
+	aiddata_activity_names TEXT NULL,
+	flow_name TEXT NULL,
+	crs_sector_code TEXT NULL,
+	crs_sector_name TEXT NULL,
+	crs_purpose_code TEXT NULL,
+	crs_purpose_name TEXT NULL,
+	coalesced_purpose_code TEXT NULL,
+	coalesced_purpose_name TEXT NULL,
+	commitment_amount_usd_constant DECIMAL(36,9) NULL,
+	total_project_cost DECIMAL(36,9) NULL,
+	crs_trade TEXT NULL,
+	crs_climate TEXT NULL,
+	crs_biodiversity TEXT NULL,
+	crs_gender TEXT NULL,
+	crs_environment TEXT NULL,
+	crs_desertification TEXT NULL,
+	pdgg TEXT NULL,
+	channel_code TEXT NULL,
+	finance_t TEXT NULL,
+	associated_financing TEXT NULL,
+	future_ds_principal_amount_usd_nominal DECIMAL(36,9) NULL,
+	future_ds_interest_amount_usd_nominal DECIMAL(36,9) NULL,
+	received_amount_usd_nominal DECIMAL(36,9) NULL,
+	irtc_amount_usd_nominal DECIMAL(36,9) NULL,
+	untied_amount_usd_nominal DECIMAL(36,9) NULL,
+	tied_amount_usd_nominal DECIMAL(36,9) NULL,
+	partial_tied_amount_usd_nominal DECIMAL(36,9) NULL,
+	finance_t2 TEXT NULL,
+	arrears_interest_amount_usd_nominal DECIMAL(36,9) NULL,
+	arrears_principal_amount_usd_nominal DECIMAL(36,9) NULL,
+	initial_report TEXT NULL,
+	ftc TEXT NULL,
+	repay_type TEXT NULL,
+	outstanding_amount_usd_nominal DECIMAL(36,9) NULL,
+	interest_amount_usd_nominal DECIMAL(36,9) NULL,
+	expert_commitment_amount_usd_nominal DECIMAL(36,9) NULL,
+	export_credit_amount_usd_nominal DECIMAL(36,9) NULL,
+	expert_extended_amount_usd_nominal DECIMAL(36,9) NULL,
+	additional_info TEXT NULL,
+	source TEXT NULL,
+	source_detail TEXT NULL
 )
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE launch_pad.AID_DATA
+ALTER TABLE launch_pad.aid_data_3
   OWNER TO "DSforthepeople";
-  
-  
---DML for moving data.
-INSERT INTO launch_pad.AID_DATA
-SELECT aiddata_id,
-CAST(year AS INTEGER),
-CASE WHEN LENGTH(commitment_date) < 19 THEN NULL
-ELSE to_date(substring(commitment_date from 1 for 10), 'YYYY-MM-DD')
+
+
+
+
+INSERT INTO launch_pad.aid_data
+SELECT CASE WHEN aiddata_id in ('  ',' null','','""') THEN NULL
+ELSE CAST(aiddata_id AS BIGINT)
 END,
-CASE WHEN LENGTH(start_date) < 19 THEN NULL
-ELSE to_date(substring(start_date from 1 for 10), 'YYYY-MM-DD')
+CASE WHEN aiddata_2_id in ('  ',' null','','""') THEN NULL
+ELSE CAST(aiddata_2_id AS BIGINT)
 END,
-CASE WHEN LENGTH(end_date) < 19 THEN NULL
-ELSE to_date(substring(end_date from 1 for 10), 'YYYY-MM-DD')
+CASE WHEN year in ('  ',' null','','""') THEN NULL
+ELSE CAST(year AS INTEGER)
 END,
 donor,
-donor_iso2,
-donor_iso3,
-umbrella,
-donor_project_id,
-crsid,
-financing_agency,
-donor_type,
-bi_multi,
-recipient,
-recipient_iso2,
-recipient_iso3,
-private_recipient,
+CAST(donor_iso2 AS CHARACTER VARYING(2)),
+donor_region,
 implementing_agency,
-channel_code,
-borrower,
-beneficiary,
-guarantor,
-other_involved_institutions,
-CASE WHEN commitment_amount in ('  ',' null','') THEN NULL
-ELSE CAST(commitment_amount AS DECIMAL(60,25))
-END,
-commitment_amount_currency,
-CASE WHEN commitment_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(commitment_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN commitment_amount_usd_constant in ('  ',' null','') THEN NULL
-ELSE CAST(commitment_amount_usd_constant AS DECIMAL(60,25))
-END,
-CASE WHEN disbursement_amount in ('  ',' null','') THEN NULL
-ELSE CAST(disbursement_amount AS DECIMAL(60,25))
-END,
-disbursement_amount_currency,
-CASE WHEN disbursement_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(disbursement_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN disbursement_amount_usd_constant in ('  ',' null','') THEN NULL
-ELSE CAST(disbursement_amount_usd_constant AS DECIMAL(60,25))
-END,
-CASE WHEN total_project_cost in ('  ',' null','') THEN NULL
-ELSE CAST(total_project_cost AS DECIMAL(60,25))
-END,
-total_project_cost_currency,
-CASE WHEN total_project_cost_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(total_project_cost_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN total_project_cost_usd_constant in ('  ',' null','') THEN NULL
-ELSE CAST(total_project_cost_usd_constant AS DECIMAL(60,25))
-END,
+financing_agency,
+crs_bi_multi,
+recipient,
+CAST(recipient_iso2 AS CHARACTER VARYING(2)),
+recipient_region,
+to_date(start_date,'DD/MM/YYYY'),
+to_date(end_date,'DD/MM/YYYY'),
+to_date(commitment_date,'DD/MM/YYYY'),
+to_date(planned_start_date,'DD/MM/YYYY'),
+to_date(planned_end_date,'DD/MM/YYYY'),
 title,
 short_description,
-short_description_original_language,
 long_description,
-long_description_original_language,
-additional_info,
-additional_info_original_language,
-flow_type,
-crs_flow_name,
-CASE WHEN number_repayments_per_year in ('  ',' null','') THEN NULL
-ELSE CAST(number_repayments_per_year AS INTEGER)
-END,
-repay_type,
-loan_term,
-grace_period,
-interest_rate,
-second_interest_rate,
-grant_element,
-cancelled,
-repay_date_first,
-CASE WHEN LENGTH(repay_date_last) < 19 THEN NULL
-ELSE to_date(substring(repay_date_last from 1 for 10), 'YYYY-MM-DD')
-END,
-CASE WHEN untied_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(untied_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN partial_tied_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(partial_tied_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN tied_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(tied_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN received_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(received_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN irtc_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(irtc_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN expert_commitment_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(expert_commitment_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN expert_extended_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(expert_extended_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN export_credit_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(export_credit_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN outstanding_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(outstanding_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN arrears_principal_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(arrears_principal_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN arrears_interest_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(arrears_interest_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN future_ds_principal_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(future_ds_principal_amount_usd_nominal AS DECIMAL(60,25))
-END,
-CASE WHEN future_ds_interest_amount_usd_nominal in ('  ',' null','') THEN NULL
-ELSE CAST(future_ds_interest_amount_usd_nominal AS DECIMAL(60,25))
-END,
-region,
-location,
-source,
-language,
-biodiversity,
-climate,
-desertification,
-crs_purpose_code,
-crs_purpose_name,
-gender,
-trade,
-pdgg,
-ftc,
-sector_programme,
-sector,
-sector_code,
-associated_financing,
-initial_report,
-finance_t,
-environmental_impact_assessment,
-environment,
-investment_project,
+donor_project_id,
+donor_secondary_id,
+aiddata_sector_code,
+aiddata_sector_name,
 aiddata_purpose_code,
 aiddata_purpose_name,
-aiddata_activity_code,
-aiddata_activity_name,
-aiddata_feasibility_study,
-aiddata_technical_assistance,
+aiddata_activity_codes,
+aiddata_activity_names,
+flow_name,
+crs_sector_code,
+crs_sector_name,
+crs_purpose_code,
+crs_purpose_name,
 coalesced_purpose_code,
-coalesced_purpose_name
-FROM kill_floor.aiddata2_1;
-
+coalesced_purpose_name,
+CAST(commitment_amount_usd_constant AS DECIMAL(36,9)),
+CAST(total_project_cost  AS DECIMAL(36,9)),
+crs_trade,
+crs_climate,
+crs_biodiversity,
+crs_gender,
+crs_environment,
+crs_desertification,
+pdgg,
+channel_code,
+finance_t,
+associated_financing,
+CAST(future_ds_principal_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(future_ds_interest_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(received_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(irtc_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(untied_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(tied_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(partial_tied_amount_usd_nominal AS DECIMAL(36,9)),
+finance_t2,
+CAST(arrears_interest_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(arrears_principal_amount_usd_nominal AS DECIMAL(36,9)),
+initial_report,
+ftc,
+repay_type,
+CAST(outstanding_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(interest_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(expert_commitment_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(export_credit_amount_usd_nominal AS DECIMAL(36,9)),
+CAST(expert_extended_amount_usd_nominal AS DECIMAL(36,9)),
+additional_info,
+source,
+source_detail
+FROM kill_floor.aiddata3_0;

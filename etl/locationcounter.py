@@ -174,22 +174,30 @@ def process_files_parallel(paths):
 # Main
 #########################################################################################################################
 
-def main(_outfile_="/etl_output/article_counts.csv", _metadatafile_="/nytimes/metadata/nytimesArticles.txt", _data_dir_="/nytimes/fullText"):
+def main(_outdir_="/etl_output/", _outfile_="article_counts.csv", _metadatafile_="/nytimes/metadata/nytimesArticles.txt", _data_dir_="/nytimes/fullText"):
+
+	'''Default arguments: _outdir_ - where output files will go, _outfile_ - name of output file, _metadatafile_ - where NyTimes metadata file from crawler is located, _data_dir_ - where NYTimes fulltext articles are located'''
 
 	# Define some needed variables
 	data_dir = data_root_dir + _data_dir_
+	out_dir = data_root_dir + _outdir_
 	start=time.time()
 	paths=[]
 
 	global OUTFILE
-	OUTFILE = data_root_dir + _outfile_
-	global METADATAFILE 
+	OUTFILE = out_dir + _outfile_
+	global METADATAFILE
 	METADATAFILE = data_root_dir + _metadatafile_
+
+ 	# Create output data directory if it doesn't exist
+	if not os.path.exists(out_dir):
+		os.mkdirs(out_dir)
 
 	# Delete the output file if it currently exists
 	if os.path.isfile(OUTFILE):
 		os.remove(OUTFILE)
-	#Added since it was breaking run -Dan
+
+	# Delete the join output as well if it currently exists
 	if os.path.isfile(OUTFILE + ".join"):
 		os.remove(OUTFILE + ".join")
 
@@ -203,7 +211,7 @@ def main(_outfile_="/etl_output/article_counts.csv", _metadatafile_="/nytimes/me
 	        paths.append(os.path.join(root, name))
 	    for name in dirs:
 	        paths.append(os.path.join(root, name))
-	
+
 	# Send path list to core location-counting function
 	process_files_parallel(paths)
 

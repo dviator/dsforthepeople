@@ -9,9 +9,7 @@ helpme
 <<<<<<< HEAD
 data/etl_output/article_counts.csv.join
 data/etl_output/article_counts.csv
-=======
-data/etl_output/*
->>>>>>> 6d6acf854f15809c00197ac5e694a99ef8af3d2a
+data/test/article_counts_test.csv
+data/test/article_counts_test.csv.join
 data/nytimes/*
 logs/*
-data/etl_output/article_counts.csv

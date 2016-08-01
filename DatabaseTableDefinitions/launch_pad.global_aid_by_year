@@ -1,9 +1,11 @@
 --This is a view for showing the total aid in USD which has been contributed every year in the aid data set.
 
 
+
+
 DROP VIEW launch_pad.global_aid_by_year;
 
 CREATE VIEW launch_pad.global_aid_by_year AS
-SELECT year, SUM(commitment_amount_usd_constant) AS COMMIT_AMOUNT FROM launch_pad.aid_data_3 GROUP BY YEAR;
+SELECT year AS x, SUM(commitment_amount_usd_constant) AS y FROM launch_pad.aid_data_3 GROUP BY YEAR;
 
 GRANT SELECT ON launch_pad.global_aid_by_year TO webuser;

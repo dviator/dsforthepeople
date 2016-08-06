@@ -18,6 +18,7 @@ import sys
 
 import pprint
 import multiprocessing
+import time
 #########################################################################################################################
 # CONFIGURATIONS
 #########################################################################################################################
@@ -52,13 +53,13 @@ def writeStockdataRow(output_file, symbol,date,high,low,close,adjclose,opn,volum
 	''' Logic for writing a stock date row, needs to be moved to a single threaded function '''
 	
 	# csv_start = time.time()
-	# logging.debug("Metadata path is {}".format(OUTFILE))
+	logging.debug("Metadata path is {}".format(output_file))
 
 	#Write metadata and reference to full text file name to csv separated by ~ character
 	with open(output_file, 'a') as csvfile:
 		Writer = csv.writer(csvfile, delimiter='~',quoting=csv.QUOTE_ALL)
 		Writer.writerow([symbol,date,high,low,close,adjclose,opn,volume])
-	# logging.debug("CSV write completed to {} in {} seconds".format(OUTFILE,time.time()- csv_start))
+	# logging.debug("CSV write completed to {} in {} seconds".format(output_file,time.time()- csv_start))
 	
 	return
 
@@ -68,7 +69,7 @@ def readNasdaqList():
 	tickers = []
 	with open(nasdaq_file, 'r') as csvfile:
 		csvReader = csv.reader(csvfile, delimiter=',')
-		csvReader.next()
+		next(csvReader)
 		for row in csvReader:
 			tickers.append(row[0])
 
@@ -97,21 +98,21 @@ def fetchStockData(ticker):
 	stock_data = {}
 
 	try:
-		print "Fetching for:" + ticker
+		print("Fetching for:" + ticker)
 		stock_data[ticker] = stocks.get_historical_info(ticker)
 		# pprint.pprint(stock_data[ticker])
 		
 	except KeyError:
-		print "Key not found:" + ticker 
+		print("Key not found:" + ticker) 
 	except stocks.NoResultsError:
-		print "No Results found for:" + ticker
+		print("No Results found for:" + ticker)
 
 	return stock_data
 
 def parseStockData(stock_data):
 	for ticker in stock_data:
 		for date in stock_data[ticker]:
-			print "Writing for" + ticker, date['Date']
+			print("Writing for" + ticker, date['Date'])
 			writeStockdataRow(output_file, ticker,
 				date["Date"], 
 				date["High"], 

@@ -14,3 +14,4 @@ data/test/article_counts_test.csv.join
 data/nytimes/*
 logs/*
 stocks/stockdata/
+stocks/yahooFinance.log

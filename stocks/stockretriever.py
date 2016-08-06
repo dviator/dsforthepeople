@@ -7,7 +7,7 @@
 """A wrapper for the Yahoo! Finance YQL api."""
 
 import sys
-import httplib
+import http.client
 import urllib
 import json
 
@@ -26,14 +26,14 @@ FINANCE_TABLES = {'quotes': 'yahoo.finance.quotes',
 def execute_yql_query(yql):
     """Returns the JSON response of the given YQL query. """
 
-    conn = httplib.HTTPConnection('query.yahooapis.com')
-    query_string = urllib.urlencode({
+    conn = http.client.HTTPConnection('query.yahooapis.com')
+    query_string = urllib.parse.urlencode({
         'q': yql,
         'format': 'json',
         'env': DATATABLES_URL
     })
     conn.request('GET', PUBLIC_API_URL + '?' + query_string)
-    return json.loads(conn.getresponse().read())
+    return json.loads(conn.getresponse().read().decode())
 
 
 class QueryError(Exception):
@@ -125,8 +125,8 @@ def get_industry_index(industry_id):
 
 if __name__ == "__main__":
     try:
-        print get_current_info(sys.argv[1:])
-        # print get_news_feed('yhoo')
-    except QueryError, err:
-        print err
+        print(get_current_info(sys.argv[1:]))
+        # print(get_news_feed('yhoo'))
+    except QueryError as err:
+        print(err,'\n\n-E- this is a fucking error\n')
         sys.exit(2)

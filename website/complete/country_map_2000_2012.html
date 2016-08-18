@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .active { fill: blue !important;}
+        /*.datamaps-key dt, .datamaps-key dd {float: none !important;}
+        .datamaps-key {right: -50px; top: 0;}*/
+
+	
+	.axis {
+	  font: 10px sans-serif;
+	  -webkit-user-select: none;
+	  -moz-user-select: none;
+	  user-select: none;
+	}
+
+	.axis .domain {
+	  fill: none;
+	  stroke: #000;
+	  stroke-opacity: .3;
+	  stroke-width: 10px;
+	  stroke-linecap: round;
+	}
+
+	.axis .halo {
+	  fill: none;
+	  stroke: #ddd;
+	  stroke-width: 8px;
+	  stroke-linecap: round;
+	}
+
+	.slider .handle {
+	  fill: #fff;
+	  stroke: #000;
+	  stroke-opacity: .5;
+	  stroke-width: 1.25px;
+	  cursor: crosshair;
+	}
+
+	//added trying to backwards engineer the capabilities of the slider
+	#slider3{
+	  margin: 20px 0 10px 20px;
+	  width: 900px;
+	}  
+	//end of addition
+	.my-button {
+		width: 15%;
+		height:5%;
+	}
+   </style>
+</head>
+<body>
+
+<div id="container1" style="border:1px solid black; width: 700px; height: 475px; position: relative;"></div>
+<div id="bContainer" style="width: 700px; position: relative;"></div>
+<script src="http://mayvenstudio.com/wp-content/uploads/2016/08/d3.v3.min_.js"></script>
+<script src="http://mayvenstudio.com/wp-content/uploads/2016/08/topojson.v1.min_.js"></script>
+<script src="http://mayvenstudio.com/wp-content/uploads/2016/08/datamaps.world_.js"></script>
+<script src="http://mayvenstudio.com/wp-content/uploads/2016/08/d3.slider.js"></script>
+<link rel="stylesheet" type="text/css" href="http://mayvenstudio.com/wp-content/uploads/2016/08/d3.slider.css" media="screen" />
+
+<script>
+
+
+
+
+
+//var series = [];
+var seriesTest = [];
+
+var data;
+d3.json("http://mayvenstudio.com/wp-content/uploads/2016/08/world_2000_2012.php", function(error, json) {
+        console.log(json)
+
+        data = json;
+	
+	var displayYear = 2010;
+	var startValue = 2010;
+
+	//This is used to load values for the x axis of the slider
+	var sliderXAxis = [];
+	
+	
+
+
+	var intIncrement = 0;
+        for (var i = 0; i < Object.keys(data.aiddata).length; i++ )
+        {
+		//populating the x axis for the slider with the year values.
+		sliderXAxis[i] = data.aiddata[i].year;
+
+		//loop to help assign the appropriate values to the data. eventually going to use this to assign the appropriate data dyanimically
+		if (parseInt(data.aiddata[i].year) == startValue)
+		{
+			
+                	seriesTest[intIncrement] = [ data.aiddata[i].ctry_iso3, parseFloat(data.aiddata[i].ctry_cash_flow)];
+        		intIncrement += 1;
+		}
+		//end of loop for assigning values		
+	}
+
+	
+	//var out = d3.map(sliderXAxis, function(d) {return d.foo;}).size();
+	//alert(out);
+	//alert(sliderXAxis[4]);
+	
+	//alert(d3.set(sliderXAxis).values());
+
+//attempt at getting the values where the brush should start
+//	var sliderXMin = d3.min(d3.values(sliderXAxis));
+
+function newMap(series) {
+
+    // Datamaps expect data in format:
+    // { "USA": { "fillColor": "#42a844", numberOfWhatever: 75},
+    //   "FRA": { "fillColor": "#8dc386", numberOfWhatever: 43 } }
+    var dataset = {};
+    // We need to colorize every country based on "numberOfWhatever"
+    // colors should be uniq for every value.
+    // For this purpose we create palette(using min/max series-value)
+    
+//Original JS from example
+    var onlyValues = series.map(function(obj){ return obj[1] });
+    var minValue = Math.min.apply(null, onlyValues),
+            maxValue = Math.max.apply(null, onlyValues);
+//end of original commented out
+    // create color palette function
+    // color can be whatever you wish
+    var paletteScale = d3.scale.linear()
+            .domain([minValue,maxValue])
+            .range(["#EFEFFF","#02386F"]); // blue color
+    // fill dataset in appropriate format
+    series.forEach(function(item){ //
+        // item example value ["USA", 70]
+        var iso = item[0],
+                value = item[1];
+        dataset[iso] = { numberOfThings: value, fillColor: paletteScale(value) };
+
+
+        });
+    // render map
+   
+
+    new Datamap({
+        element: document.getElementById('container1'),
+        projection: 'mercator', // big world map
+        // countries don't listed in dataset will be painted with this color
+        fills: { defaultFill: '#F5F5F5' },
+        data: dataset,
+        geographyConfig: {
+            borderColor: '#DEDEDE',
+            highlightBorderWidth: 2,
+            // don't change color on mouse hover
+            highlightFillColor: function(geo) {
+                return geo['fillColor'] || '#F5F5F5';
+            },
+            // only change border
+            highlightBorderColor: '#B7B7B7',
+            // show desired information in tooltip
+            popupTemplate: function(geo, data) {
+                // don't show tooltip if country don't present in dataset
+                if (!data) { return ; }
+                // tooltip content
+                return ['<div class="hoverinfo">',
+                    '<strong>', geo.properties.name, '</strong>',
+                    '<br>Financial Aid in USD: <strong>', data.numberOfThings.toLocaleString('en'), '</strong>',
+                    '</div>'].join('');
+            }
+        }
+	});
+}
+
+
+
+
+newMap(seriesTest);
+
+// This is the start of the slider.
+//alert('really?');
+
+//d3.select('body').append('p').text('Now we are cooking with gas!');
+
+
+
+
+
+
+d3.select('body').select('div#bContainer').selectAll('input').data(d3.set(sliderXAxis).values()).enter()
+	.append('input')
+	.attr('type','button')
+	.attr('class','my-button')
+	.attr('value',function (d){return d;})
+	.style('background-color','transparent')
+	.style('border','1px solid')
+	.style('transition','.2s ease')
+	.style('height','5%')
+	.style('width','25%')
+	.style('font-family','Arial, Helvetica, san-serif')
+	.on('click', function(d) {
+	//This is going to be the meat of the code for changing the year
+	//	alert(d);
+	//	alert(displayYear);
+		displayYear = d;
+	//	alert(displayYear);
+
+		intIncrement = 0;
+		for (var i = 0; i < Object.keys(data.aiddata).length; i++ )
+	        {
+
+			if (parseInt(data.aiddata[i].year) == displayYear)
+        	        {
+                       	 seriesTest[intIncrement] = [ data.aiddata[i].ctry_iso3, parseFloat(data.aiddata[i].ctry_cash_flow)];
+                       	 intIncrement += 1;
+               		}
+		}
+		
+		d3.select('body').selectAll('svg').remove();
+		//d3.select('body').select('div#container1').remove();
+		newMap(seriesTest);
+		d3.select('body').select('div.datamap').style('left','0').style('top','0');
+	
+		
+
+
+		});
+
+
+
+
+});
+</script>
+
+<div id="slider"></div>
+
+</body>
+</html>

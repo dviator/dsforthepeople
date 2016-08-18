@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<script src="http://mayvenstudio.com/wp-content/uploads/2016/08/d3.v3.min_.js"></script>
+<script src="http://mayvenstudio.com/wp-content/uploads/2016/08/nv.d3.min_.js"></script>
+<link rel="stylesheet" type="text/css" href="http://mayvenstudio.com/wp-content/uploads/2016/08/nv.d3.css" media="screen" />
+
+<script>
+
+var data;
+
+d3.json("http://mayvenstudio.com/wp-content/uploads/2016/08/global_commit_by_year.php", function(error, json) {
+	console.log(json)
+
+	data = json;
+	
+	nv.addGraph(function() {
+ 		var chart = nv.models.lineChart()
+                .margin({left: 110})  //Adjust chart margins to give the x-axis some breathing room.
+                .useInteractiveGuideline(true)  //We want nice looking tooltips and a guideline!
+                .showLegend(true)       //Show the legend, allowing users to turn on/off line series.
+                .showYAxis(true)        //Show the y-axis
+                .showXAxis(true)        //Show the x-axis
+		;
+
+  		chart.xAxis     //Chart x-axis settings
+      			.axisLabel('Year')
+      			.tickFormat(d3.format('.4r'));
+  		chart.yAxis     //Chart y-axis settings
+      			.axisLabel('Amount of Aid in USD')
+      			.tickFormat(d3.format(',d'))
+			.domain([180000000000,330000000000])
+			//added in an effort to fix the margin spacing
+			.axisLabelDistance(45);
+  		d3.select('#chart svg')    //Select the <svg> element you want to render the chart in.   
+      			.datum(dataLoad())         //Populate the <svg> element with chart data...
+  			.call(chart);          //Finally, rend/r the chart!
+		
+  		//Update the chart when window resizes.
+  		nv.utils.windowResize(function() { chart.update() });
+  		return chart;
+		});
+
+		
+	//This function is being used to push the data to the bar chart
+	function dataLoad() {
+		var aidyear = [];
+
+	for (var i = 0; i < Object.keys(data.aiddata).length; i++)
+		{
+			aidyear.push({x: data.aiddata[i].year, y: data.aiddata[i].commit_amount});
+		}
+
+	return [
+		{
+			values: aidyear,
+			key: 'Global Financial Aid',
+			color:  '#ff7f0e'
+		}
+		];
+	}
+
+
+
+
+	});	
+
+
+</script>
+<style>
+#chart svg {
+	height: 400px;
+	width: 500px;
+}
+</style>
+
+<div id="chart">
+	<svg></svg>
+</div>
+
+</body>
+</html>

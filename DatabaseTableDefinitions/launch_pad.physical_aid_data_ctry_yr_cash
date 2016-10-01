@@ -1,0 +1,86 @@
+--This view brings together information from location counter and financial data for use in reporting.
+
+
+--DROP VIEW launch_pad.physical_aid_data_ctry_yr_cash;
+
+CREATE VIEW launch_pad.physical_aid_data_ctry_yr_cash AS 
+SELECT COALESCE(ctry_year.year, LOCATION_COUNT.year) AS year,
+ COALESCE(ctry_year.CTRY_ISO3, LOCATION_COUNT.country_iso3) AS CTRY_ISO3,
+ ctry_year.CTRY_CASH_FLOW AS CTRY_CASH_FLOW,
+ --Calculation to see where the cash flow falls on a scale of 0 to 100 of all cash flows in the year.
+ CASE 
+	WHEN ctry_year.CTRY_CASH_FLOW < 0 THEN
+		((ctry_year.CTRY_CASH_FLOW) / (ctry_year.MAX_YR_CASH_FLOW + ctry_year.MIN_YR_CASH_FLOW)) * 100
+	WHEN ctry_year.CTRY_CASH_FLOW > 0 THEN
+		((ctry_year.CTRY_CASH_FLOW + ctry_year.MIN_YR_CASH_FLOW) / (ctry_year.MAX_YR_CASH_FLOW + ctry_year.MIN_YR_CASH_FLOW)) * 100
+	ELSE ctry_year.CTRY_CASH_FLOW
+ END AS RATIO_CTRY_CASH_FLOW,
+ LOCATION_COUNT.location_count,
+ ROUND(LOCATION_COUNT.location_count / LOCATION_COUNT.year_location_count,3) AS location_count_ratio,
+ CTRY_INFO.country_name
+FROM
+	(
+	--Grabs the max and min for the country, and calculated the total inflow/outflow
+	SELECT flg_sum.year,
+	 flg_sum.CTRY_ISO3 AS CTRY_ISO3,
+	 SUM(flg_sum.cash_flow) AS CTRY_CASH_FLOW,
+	 MAX(SUM(flg_sum.cash_flow)) OVER (PARTITION BY flg_sum.year) AS MAX_YR_CASH_FLOW,
+	 MIN(SUM(flg_sum.cash_flow)) OVER (PARTITION BY flg_sum.year) AS MIN_YR_CASH_FLOW
+	FROM (
+		--grabs the donations for each country, filters bad data.
+		SELECT year,
+		--Case statement to handle exceptions in the 2007 data
+		ctry.country_iso3 AS CTRY_ISO3,
+		SUM(commitment_amount_usd_constant) AS CASH_FLOW,
+		 'D' AS DONOR_RECEIVER_FLG
+		FROM launch_pad.aid_data_3 aid
+		--Added join to country to convert the iso 2 to iso 3 for the visualization
+		INNER JOIN kill_floor.country_information ctry
+		ON aid.donor_iso2 = ctry.country_iso2
+		--Commented out the two lines below in order to allow exception records to flow through.
+		WHERE ctry.country_iso3 IS NOT NULL
+			AND ctry.country_iso3 NOT IN ('  ','')
+			AND commitment_amount_usd_constant IS NOT NULL
+		GROUP BY year, ctry.country_iso3, DONOR_RECEIVER_FLG
+		UNION ALL
+		--grabs the receiveing for each country, filters out bad data.
+		SELECT year,
+			ctry.country_iso3 AS CTRY_ISO3,
+		 SUM(commitment_amount_usd_constant * -1) AS CASH_FLOW,
+		 'R' AS DONOR_RECEIVER_FLG
+		FROM launch_pad.aid_data_3 aid
+		INNER JOIN kill_floor.country_information ctry
+		ON aid.recipient_iso2  = ctry.country_iso2
+		WHERE ctry.country_iso3  IS NOT NULL
+			AND ctry.country_iso3  NOT IN ('  ','')
+			AND commitment_amount_usd_constant IS NOT NULL
+		GROUP BY year, ctry.country_iso3 , DONOR_RECEIVER_FLG) flg_sum
+	--the last filtreration of bad data, removes bad/dirty ISO3's
+	WHERE LENGTH(CTRY_ISO3) = 3
+	AND CTRY_ISO3 NOT LIKE ('% %')
+	AND year <> 9999
+	AND year <> 2013
+	GROUP BY flg_sum.year, flg_sum.CTRY_ISO3) ctry_year
+FULL OUTER JOIN (
+	SELECT NY_LOC.source,
+		extract(year from NY_LOC.date) as year,
+		C_INFO.country_iso3,
+		count(*) AS location_count,
+		COUNT(*) OVER (PARTITION BY extract(year from NY_LOC.date)) AS year_location_count
+	FROM kill_floor.nytimeslocations NY_LOC
+	LEFT JOIN kill_floor.country_information C_INFO
+	ON NY_lOC.country = C_INFO.country_iso2
+	GROUP BY source,
+		extract(year from date),
+		C_INFO.country_iso3
+	) LOCATION_COUNT
+ON ctry_year.year = LOCATION_COUNT.year
+AND ctry_year.CTRY_ISO3 = LOCATION_COUNT.country_iso3
+INNER JOIN kill_floor.country_information CTRY_INFO
+ON (ctry_year.CTRY_ISO3 = CTRY_INFO.country_iso3 OR LOCATION_COUNT.country_iso3 = CTRY_INFO.country_iso3);
+
+
+--Intention of this is to insert into a physical table for performance.
+INSERT INTO launch_pad.location_count_aid_amount_fact
+SELECT *
+FROM launch_pad.physical_aid_data_ctry_yr_cash;

@@ -8,9 +8,9 @@ CREATE TABLE launch_pad.location_count_aid_amount_fact
   year integer NOT NULL,
   ctry_iso3 character varying(3) NOT NULL,
   ctry_cash_flow numeric(60,25) NULL,
-  ratio_ctry_cash_flow numeric(6,3) NULL,
+  ratio_ctry_cash_flow numeric(9,3) NULL,
   location_count integer  NULL,
-  ratio_location numeric(6,3)  NULL,
+  ratio_location numeric(9,3)  NULL,
   country_name character varying(100) NULL
 )
 WITH (
@@ -22,3 +22,5 @@ GRANT ALL ON TABLE launch_pad.location_count_aid_amount_fact TO "DSforthepeople"
 GRANT SELECT ON TABLE launch_pad.location_count_aid_amount_fact TO webuser;
 GRANT ALL ON TABLE launch_pad.location_count_aid_amount_fact TO markmastrangelo;
 GRANT SELECT ON TABLE launch_pad.location_count_aid_amount_fact TO qlik_service_account;
+
+

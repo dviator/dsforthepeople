@@ -1,0 +1,21 @@
+CREATE VIEW launch_pad.vw_aid_amount_location_count AS 
+SELECT finance.recipient_iso2 AS "Recipient ISO 2",
+	finance.donor_iso2 AS "Donor ISO 2",
+	location_count.year AS "Aid Year",
+	SUM(finance.commitment_amount_usd_constant) AS "Amount Donated",
+	recipient_country.country_name AS "Recipient Country Name",
+	donor_country.country_name AS "Donor Country Name",
+	sum(location_count) AS "Location Count"
+FROM launch_pad.aid_data_3 finance
+LEFT JOIN launch_pad.country_location_count location_count
+ON finance.recipient_iso2 = location_count.country_iso2
+AND extract(year from finance.start_date) = location_count.year
+LEFT JOIN kill_floor.country_information recipient_country
+ON finance.recipient_iso2 = recipient_country.country_iso2
+LEFT JOIN kill_floor.country_information donor_country
+ON finance.donor_iso2 = donor_country.country_iso2
+GROUP BY finance.recipient_iso2,
+	finance.donor_iso2,
+	location_count.year,
+	recipient_country.country_name,
+	donor_country.country_name;

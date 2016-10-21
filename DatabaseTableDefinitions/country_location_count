@@ -1,0 +1,5 @@
+CREATE TABLE launch_pad.country_location_count (
+	year int NULL,
+	country_iso2 character varying(2) NULL,
+	location_count int
+)

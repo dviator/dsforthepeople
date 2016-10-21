@@ -1,0 +1,17 @@
+CREATE TABLE launch_pad.aid_data_amount_location_count_fact
+(
+	recipient_iso2 CHARACTER VARYING(2) NULL,
+	donor_iso2 CHARACTER VARYING(2) NULL,
+	year int NULL,
+	amount_committed_usd float NULL,
+	recipient_country_name character varying(50) NULL,
+	donor_country_name character varying(50) NULL,
+	location_count int NULL
+)
+
+GRANT SELECT ON launch_pad.aid_data_amount_location_count_fact TO qlik_service_account;
+
+
+INSERT INTO launch_pad.aid_data_amount_location_count_fact (recipient_iso2, donor_iso2, year, amount_committed_usd, recipient_country_name, donor_country_name, location_count)
+SELECT *
+FROM launch_pad.vw_aid_amount_location_count;

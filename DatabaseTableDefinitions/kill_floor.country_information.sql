@@ -277,3 +277,17 @@ INSERT INTO kill_floor.country_information VALUES('WESTERN SAHARA','','Morocco',
 INSERT INTO kill_floor.country_information VALUES('Yemen','','','YEM','YE','YEM',887,'Yemen','');
 INSERT INTO kill_floor.country_information VALUES('ZAMBIA','','','ZMB','ZM','ZAM',894,'Zambia','');
 INSERT INTO kill_floor.country_information VALUES('ZIMBABWE','','','ZWE','ZW','ZIM',716,'Zimbabwe','');
+
+
+
+----------------------HAVE SOME DIRTY DATA IN THE ABOVE INSERT. RUN THIS IN SEQUENCE
+DELETE FROM kill_floor.country_information
+WHERE country_iso2 IN ('AI','MS','SH','SO','TC','TK','WF');
+
+INSERT INTO kill_floor.country_information VALUES('Anguilla','','Anguilla','AIA','AI','ANU',660,'Anguilla','Geographical; Postal; Currency; Telephone');
+INSERT INTO kill_floor.country_information VALUES('Montserrat','','Montserrat','MSR','MS','MOT',500,'Montserrat','Geographical; Postal; Currency; Telephone');
+INSERT INTO kill_floor.country_information VALUES('Saint Helena','','Saint Helena','SHN','SH','STH',654,'Saint Helena','Geographical; Postal; Currency; Telephone');
+INSERT INTO kill_floor.country_information VALUES('Somalia','','','SOM','SO','SOM',706,'Somalia','');
+INSERT INTO kill_floor.country_information VALUES('Turks & Caicos Islands','','United Kingdom','TCA','TC','TUC',796,'Turks & Caicos Islands','Geographical; Postal; Currency; Telephone');
+INSERT INTO kill_floor.country_information VALUES('Tokelau','','New Zealand','TKL','TK','TOK',772,'Tokelau','Geographical; Postal; Telephone');
+INSERT INTO kill_floor.country_information VALUES('Wallis & Futuna','','France','WLF','WF','WAL',876,'Wallis & Futuna','Geographical; Postal; Currency; Telephone');
